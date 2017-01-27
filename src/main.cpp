@@ -43,7 +43,6 @@ Logger mainLogger("main");
 // };
 
 
-
 void setup()
 {
     Serial.begin(9600);
@@ -54,7 +53,7 @@ void setup()
     Display.displayText(0, 0, "STARTING");
     Display.displayRobotGeometry(geometry);
     Display.show();
-    delay(500);
+    delay(5000);
 
     // --- init servos ---
 
@@ -70,6 +69,7 @@ void setup()
 
         // servos[i]->setTargetRadAngle(0);
     }
+
     // additional axis
     for (size_t i = 0; i < 2; i++) {
         servos[i + 6] = new MyServo(additionalAxisServoConfig[i][0],
@@ -81,11 +81,24 @@ void setup()
                                     );
     }
 
-    Kin = new Kinematic(geometry);
+
+    Kin = new Kinematic(geometry, robotType);
+
+    Display.displayText(0, 8 * 1, "KIN");
+    Display.show();
+    delay(500);
 
     RoboCon = new RobotController(servos, Kin);
 
+    Display.displayText(0, 8 * 2, "Con");
+    Display.show();
+    delay(500);
+
     AxisController = new AdditionalAxisController(servos + 6);
+
+    Display.displayText(0, 8 * 3, "Axis");
+    Display.show();
+    delay(500);
 
     serialCommand = new handleSerialCommand(RoboCon, IOLogic, AxisController);
 
@@ -99,6 +112,7 @@ void setup()
     // RoboCon->setTargetAngle(2,-10.0/180.0*PI);
 
     Timer1.initialize(20 * 1000); // 20ms
+
 
     Timer1.attachInterrupt(updateServos);
 }
@@ -191,4 +205,13 @@ void loop()
     // mainLogger.time("after Display");
 
     serialCommand->listen();
+
+    for (size_t i = 0; i < 8; i++) {
+        if (servos[i]->getOutOfRange()) {
+            logger.warning("out of frequency range. servo i: " + String(i) + " minAngle: "  + String(
+                               servos[i]->getMinRadAngle() / PI * 180) + " maxAngle: " + String(
+                               servos[i]->getMaxRadAngle() / PI * 180) +  " target angle: " +
+                           String(servos[i]->getTargetRadAngle() / PI * 180));
+        }
+    }
 }

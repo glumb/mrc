@@ -14,7 +14,9 @@ void log(String text) {
     logger.info(text);
 }
 
-Kinematic::Kinematic(float geometry[5][3]) {
+Kinematic::Kinematic(float geometry[5][3], ROBOT_TYPE robotType) {
+    this->robotType = robotType;
+
     this->V1_length_x_y   =  sqrt(pow(geometry[1][0], 2) +  pow(geometry[1][1], 2));
     this->V4_length_x_y_z =  sqrt(pow(geometry[4][0], 2) +  pow(geometry[4][1], 2) +  pow(geometry[4][2], 2));
 
@@ -56,6 +58,7 @@ Kinematic::Kinematic(float geometry[5][3]) {
 int Kinematic::inverse(float x, float y, float z, float a, float b, float c, float angles[6]) {
     // console.log(x, y, z, a, b, c)
 
+
     float ca = cos(a);
     float sa = sin(a);
     float cb = cos(b);
@@ -68,6 +71,18 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
         cb * sc,
         -sb,
     };
+
+    if (this->robotType == ROBOT_TYPE::AXIS4) {
+        if ((abs(targetVectorX[0]) > 0.0001) || (abs(targetVectorX[1] + 1) > 0.0001) ||
+            (abs(targetVectorX[2]) > 0.0001)) {
+            logger.warning("cant reach pose, TCP axis must be vertical");
+
+            // return Kinematic::OUT_OF_RANGE; todo or use this
+        }
+        targetVectorX[0] = 0;
+        targetVectorX[0] = -1;
+        targetVectorX[0] = 0;
+    }
 
     float R[6] = {
         this->A_corrected[0],
@@ -273,6 +288,30 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     //         R[4] = PI / 2 + (PI / 2 - R[4]);
     //     }
     // }
+    //
+    if (R[3] > PI / 2.0) {
+        R[3] -= PI;
+        R[5] -= PI;
+
+        if (R[4] > PI / 2.0) {
+            // R[4] = R[4] + PI
+            R[4] = PI / 2.0 - (R[4] - PI / 2.0);
+        } else {
+            // R[4] -R[4] + PI
+            R[4] = PI / 2.0 + (PI / 2.0 - R[4]);
+        }
+    } else if (R[3] < -PI / 2.0) {
+        R[3] += PI;
+        R[5] += PI;
+
+        if (R[4] > PI / 2.0) {
+            R[4] = PI / 2.0 - (R[4] - PI / 2.0);
+        } else {
+            R[4] = PI / 2.0 + (PI / 2.0 - R[4]);
+        }
+    }
+
+    R[5] = fmod((-PI + (fmod((R[5] + PI), (2 * PI)))), (2 * PI));
 
     // ---- A5 ----
 
@@ -367,6 +406,11 @@ void Kinematic::forward(float A0, float A1, float A2, float A3, float A4, float 
 }
 
 void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, float R4, float R5, float jointsResult[7][3]) {
+    if (this->robotType == ROBOT_TYPE::AXIS4) {
+        R3 = 0;
+        R4 = -(R1 + R2);
+    }
+
     float a = cos(R0);
     float b = sin(R0);
     float c = this->geometry[0][0];
@@ -394,6 +438,7 @@ void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, flo
     float y = this->geometry[4][2];
     float A = cos(R5 - PI);
     float B = sin(R5 - PI);
+
 
     // float C = 0 // this->geometry[5][0]
     // float D = 0 // this->geometry[5][1]
@@ -433,9 +478,20 @@ void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, flo
                          k * q * y - b * f * l * q * y;
 
     float M[3][3] = {
-        { a *g *k *p *u + a *f *l *p *u - b *q *u + a *f *k *v - a *g *l *v,                                                 +B *b *p - B *a *g *k *q + B *a *f *l *q + A *a *f *k *u - A *a *g *l *u - A *a *g *k *p *v - A *a *f *l *p *v + A *b *q *v, A *b *p + A *a *g *k *q + A *a *f *l *q - B *a *f *k *u + B *a *g *l *u + B *a *g *k *p *v + B *a *f *l *p *v - B *b *q *v                                },
-        {                             -f * k * p * u + g * l * p * u + g * k * v + f * l * v, B * f * k * q + B * g * l * q + A * g * k * u + A * f * l * u + A * f * k * p * v - A * g * l * p * v,                                                                                                         -A * f * k * q + A * g * l * q - B * g * k * u - B * f * l * u - B * f * k * p * v + B * g * l * p * v },
-        { -b * g * k * p * u - b * f * l * p * u - a * q * u - b * f * k * v + b * g * l * v, +B * a * p - B * b * g * k * q - B * b * f * l * q - A * b * f * k * u + A * b * g * l * u + A * b * g * k * p * v + A * b * f * l * p * v + A * a * q * v, A * a * p - A * b * g * k * q - A * b * f * l * q + B * b * f * k * u - B * b * g * l * u - B * b * g * k * p * v - B * b * f * l * p * v - B * a * q * v },
+        { a *g *k *p *u + a *f *l *p *u - b *q *u + a *f *k *v - a *g *l *v,
+          +B *b *p - B *a *g *k *q + B *a *f *l *q + A *a *f *k *u - A *a *g *l *u - A *a *g *k *p *v - A *a *f *l *p *v + A *b *q *v,
+          A *b *p + A *a *g *k *q + A *a *f *l *q - B *a *f *k *u + B *a *g *l *u + B *a *g *k *p *v + B *a *f *l *p *v -
+          B *b *q *v                                                                                                                                                                                                                                                  },
+        {                             -f * k * p * u + g * l * p * u + g * k * v + f * l * v,
+                                      B * f * k * q + B * g * l * q + A * g * k * u + A * f * l * u + A * f * k * p * v - A * g * l * p * v,
+                                      -A * f * k * q + A * g * l * q - B * g * k * u - B * f * l * u - B * f * k * p * v + B * g * l * p *
+                                      v },
+        { -b * g * k * p * u - b * f * l * p * u - a * q * u - b * f * k * v + b * g * l * v,
+          +B * a * p - B * b * g * k * q - B * b * f * l * q - A * b * f * k * u + A * b * g * l * u + A * b * g * k * p * v + A * b * f *
+          l * p * v + A * a * q * v,
+          A * a * p - A * b * g * k * q - A * b * f * l * q + B * b * f * k * u - B * b * g * l * u - B * b * g * k * p * v - B * b * f *
+          l * p * v - B * a * q *
+          v                                                                                                                                                                                                                                                                                                                           },
     };
 
     // float M[3][3] = {

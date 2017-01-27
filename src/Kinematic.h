@@ -2,15 +2,17 @@
 #ifndef KINEMATIC_H
 #define KINEMATIC_H
 
-#define MAX_NUMBER_OF_PINS 10
 
 class Kinematic {
 public:
 
-    Kinematic(float geometry[5][3]);
+    enum ROBOT_TYPE { AXIS6, AXIS4 };
+
+    Kinematic(float geometry[5][3], ROBOT_TYPE robotType = ROBOT_TYPE::AXIS6);
 
     static const unsigned int OK;
     static const unsigned int OUT_OF_RANGE;
+
 
     int inverse(float x,
                         float y,
@@ -56,5 +58,7 @@ private:
     float geometry[5][3];
     float J_initial_absolute[5][3];
     double A_corrected[6];
+
+    ROBOT_TYPE robotType;
 };
 #endif

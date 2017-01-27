@@ -27,7 +27,7 @@ const unsigned char SRCP_END   = '\r';
 const unsigned char SRCP_COMMAND_QUEUE_IN     = 'Q';
 const unsigned char SRCP_COMMAND_MOVE_TO      = 'G';
 const unsigned char SRCP_COMMAND_HALT         = 'H';
-const unsigned char SRCP_COMMAND_GET_ANGLE    = 'A';
+const unsigned char SRCP_COMMAND_GET_ANGLE    = 'L';
 const unsigned char SRCP_COMMAND_GET_POSITION = 'P';
 const unsigned char SRCP_COMMAND_TEST         = 'T';
 
@@ -46,7 +46,7 @@ const unsigned int SRIL_MOVEMENT_METHOD_P2P      = 0;
 const unsigned int SRIL_MOVEMENT_METHOD_LINEAR   = 1;
 const unsigned int SRIL_MOVEMENT_METHOD_CIRCULAR = 2;
 
-//todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
+// todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
 
 class handleSerialCommand {
 public:
@@ -264,8 +264,25 @@ public:
 
         case SRCP_COMMAND_HALT:
         case SRCP_COMMAND_GET_ANGLE:
+
         case SRCP_COMMAND_GET_POSITION:
+        {
+            float currentPose[6];
+            robotController->getCurrentPose(currentPose);
+            Serial.print("x ");
+            Serial.println(currentPose[0]);
+            Serial.print("y ");
+            Serial.println(currentPose[1]);
+            Serial.print("z ");
+            Serial.println(currentPose[2]);
+            Serial.print("a ");
+            Serial.println(currentPose[3]);
+            Serial.print("b ");
+            Serial.println(currentPose[4]);
+            Serial.print("c ");
+            Serial.println(currentPose[5]);
             break;
+        }
 
         case SRCP_COMMAND_TEST:
 
@@ -294,6 +311,7 @@ public:
             logger.info((char)buffer[0]);
             {
                 unsigned int status;
+
                 // logger.time("before ringbuffer");                         // todo put in class
                 status = SRILRingBuffer.putBytes(buffer, length); // queu in SRIL minus SRCP command
                 // logger.time("after ringbuffer");                         // todo put in class
@@ -341,10 +359,11 @@ public:
             if (incomingByte == SRCP_START) {
                 // dont save the start byte
             } else if (incomingByte == SRCP_END) { // message complete. write to messagequeue
-              // logger.time("beforeee parseCommand");
+                // logger.time("beforeee parseCommand");
                 logger.info("Frame end");
                 inputByteBuffer[inputByteBufferPointer + 1] = 0;
                 logger.info(inputByteBuffer);
+
                 // logger.time("before parseCommand");
                 parseCommand(inputByteBuffer, inputByteBufferPointer);
                 frameStarted = false;
@@ -375,9 +394,11 @@ public:
         unsigned int bytesRead = 0;
 
         logger.resetTime();
+
         while (Serial.available() && bytesRead < READ_NUMBER_OF_BYTES_FROM_SERIAL_BEFORE_CONTINUE) {
             // logger.time("before serial read");
             parseSRCP(Serial.read());
+
             // logger.time("after serial read");
             bytesRead++;
         }
@@ -390,7 +411,6 @@ public:
                 Serial.println(String("$$") + SRILRingBuffer.getSize());
             }
         }
-
     }
 
     int getBufferSize() {

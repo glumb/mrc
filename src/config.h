@@ -1,4 +1,5 @@
 #include "Arduino.h"
+#include "Kinematic.h"
 // ---- Servos ---- todo why not pwm pins? 3-6 9-10 20-23
 #define pin_robot_servo_0 3
 #define pin_robot_servo_1 4
@@ -43,15 +44,17 @@
 
 // 4 axis
 const float servoConfig[6][7] = {
-    { pin_robot_servo_0,  150,   592.00, 2241.00,  -75.00,   90.00,   0 },
-    { pin_robot_servo_1,  150,   772.00, 1800.00,  -90.00,   19.00,   0 },
-    { pin_robot_servo_2,  150,  1440.00,  670.00,  -90.00,  -10.00, -30 },
-    { pin_robot_servo_3,  150,  1500.00, 1500.00,   -1.00,    1.00,   0 },
-    { pin_robot_servo_4,  150,  1500.00, 1500.00, -360.00,  360.00,   30 },
-    { pin_robot_servo_5,  150,   701.00, 2152.00,  -90.00,   45.00,   0 }
+        { pin_robot_servo_0,  250,  570.00, 2400.00,  -77.00,  83.00,   0 },
+        { pin_robot_servo_1,  250, 1190.00, 2400.00,  -90.00,  18.00,   0 },
+        { pin_robot_servo_2,  250, 2175.00,  968.00, -110.00,  -9.00, -30 },
+        { pin_robot_servo_3,  250, 1500.00, 1500.00,  -90.00,  75.00,   0 },
+        { pin_robot_servo_4,  250, 1500.00, 1500.00,  -20.00, 135.00,  30 },
+        { pin_robot_servo_5,  250, 2250.00,  750.00,  -57.00, 90.00, 0 }
 };
 
 float geometry[5][3] = { { 2.5 + 2.3, 7.3, 0 }, { 0, 13.0, 0 }, { 1, 0, 0 }, { 12.6, 0, 0 }, { 0, -3.6, 0 } };
+
+Kinematic::ROBOT_TYPE robotType = Kinematic::ROBOT_TYPE::AXIS4;
 
 #define kinematic_coupling(servos, i) {                                        \
         if ((i) == 1) {                                                        \

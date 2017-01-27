@@ -28,12 +28,17 @@ MyServo::MyServo(int          pinNumber,
     this->maxRadAngle = maxRadAngle;
 
     if (minRadAngle > maxRadAngle) {
+        logger.error("minAngle must be smaller than maxAngle on servo " + String(pinNumber) + " initialization (min: " + String(
+                         minRadAngle / PI * 180) + " max: " + String(maxRadAngle / PI * 180) + ")");
+    }
+
+    if (minRadAngle > maxRadAngle) {
         logger.error("minRadAngle must be smaller than maxRadAngle. Servo pin number: " + String(pinNumber));
     }
 
-    this->currentAngle = homeAngle;
-
-    this->homeAngle = homeRadAngle;
+    this->currentAngle = homeRadAngle;
+    this->targetAngle  = homeRadAngle;
+    this->homeAngle    = homeRadAngle;
 
     this->minFreq = minFreq;
     this->maxFreq = maxFreq;
@@ -55,6 +60,10 @@ float MyServo::getHomeRadAngle() {
 }
 
 void MyServo::setAngleLimits(float minRadAngle, float maxRadAngle) {
+    if (minRadAngle > maxRadAngle) {
+        logger.error("minAngle must be smaller than maxAngle on servo_num: " + String(this->pinNumber) + " (min: " + String(
+                         minRadAngle / PI * 180) + " max: " + String(maxRadAngle / PI * 180) + ")");
+    }
     this->minRadAngle = minRadAngle;
     this->maxRadAngle = maxRadAngle;
 }
@@ -111,17 +120,8 @@ void MyServo::setTargetRadAngle(float angleRad) {
 
     // account for offsetAngle
     // todo maybe just constrain() here in logic angles and in the move method on the overall (offset+target) target angle
-    if (angleRad + this->offsetAngle > this->maxRadAngle) {
-        logger.warning("physical limit reached. target angle: " + String(angleRad / PI * 180) + " max angle: " +
-                       String(this->maxRadAngle / PI * 180) + " offset angle: " + String(this->offsetAngle / PI * 180));
-        this->targetAngle = this->maxRadAngle - this->offsetAngle;
-    } else if (angleRad + this->offsetAngle < this->minRadAngle) {
-        logger.warning("physical limit reached. target angle: " + String(angleRad / PI * 180) + " min angle: " +
-                       String(this->minRadAngle / PI * 180) + " offset angle: " + String(this->offsetAngle / PI * 180));
-        this->targetAngle = this->minRadAngle - this->offsetAngle;
-    } else {
-        this->targetAngle = angleRad;
-    }
+
+    this->targetAngle = angleRad;
 }
 
 void MyServo::setFreqency(long microseconds) {
@@ -129,9 +129,7 @@ void MyServo::setFreqency(long microseconds) {
 }
 
 void MyServo::setOffset(float angleRad) {
-    if ((angleRad + this->targetAngle <= this->maxRadAngle) && (angleRad + this->targetAngle >= this->minRadAngle)) {
-        this->offsetAngle = angleRad;
-    }
+    this->offsetAngle = angleRad;
 }
 
 float MyServo::getOffset() {
@@ -205,9 +203,18 @@ void MyServo::move() {
         this->map_float(this->currentAngle + this->offsetAngle, this->minRadAngle, this->maxRadAngle, this->minFreq, this->maxFreq)
         );
 
-    if ((freq < this->minFreq) || (freq > this->maxFreq)) {
-        logger.warn("out of frequency range. servo_pin: " + String(this->pinNumber));
-        return;
+    this->outOfRange = false;
+
+    if (this->maxFreq > this->minFreq) {
+        if ((freq < this->minFreq) || (freq > this->maxFreq)) {
+            this->outOfRange = true;
+            return;
+        }
+    } else {
+        if ((freq > this->minFreq) || (freq < this->maxFreq)) {
+            this->outOfRange = true;
+            return;
+        }
     }
 
     if (!this->virtualServo) this->servo.writeMicroseconds(freq);
@@ -216,4 +223,8 @@ void MyServo::move() {
 float MyServo::map_float(float x, float in_min, float in_max, float out_min, float out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+bool MyServo::getOutOfRange() {
+    return this->outOfRange;
 }

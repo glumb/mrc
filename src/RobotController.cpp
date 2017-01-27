@@ -7,7 +7,8 @@ namespace {
 Logger logger("RobotController");
 }
 
-//no kinematic coupling here because it must happen step by step in the servo update method to be able to move kincouping independent from speed
+// no kinematic coupling here because it must happen step by step in the servo update method to be able to move kincouping independent from
+// speed
 #define NORM(v, u, length) {                                                  \
         (length) = sqrt((u)[0] * (u)[0] + (u)[1] * (u)[1] + (u)[2] * (u)[2]); \
         (v)[0]   = (u)[0] / length;                                           \
@@ -62,12 +63,20 @@ RobotController::RobotController(MyServo *servos[], Kinematic *Kin) {
 
     this->maxVelocity = 70; // in units per s
 
-    this->moveAsFarAsPossibleOnOutOfBound = false;
+    this->moveAsFarAsPossibleOnOutOfBound = true;
 
     // this->targetAngleBuffer = { 0, 0, 0, 0, 0, 0 };
+    this->getCurrentAngles(this->targetAngleBuffer);
 
     this->setTargetAngles(this->targetAngleBuffer);
 
+    // delay(5000);
+    // Serial.println(this->targetAngleBuffer[0]);
+    // Serial.println(this->targetAngleBuffer[1]);
+    // Serial.println(this->targetAngleBuffer[2]);
+    // Serial.println(this->targetAngleBuffer[3]);
+    // Serial.println(this->targetAngleBuffer[4]);
+    // Serial.println(this->targetAngleBuffer[5]);
     this->process();
 }
 
@@ -166,9 +175,16 @@ void RobotController::setTargetPose(POSITION position, float value) {
     this->state = PREPARE_MOVE;
 }
 
+void RobotController::getCurrentAngles(float currentAngles[]) {
+    for (unsigned int i = 0; i < NUMBER_OF_AXIS; i++) {
+        currentAngles[i] = this->Servos[i]->getCurrentAngleExcludingOffset();
+    }
+}
+
 // todo add stop method() targetPose = currentPose
 
 void RobotController::_setTargetPose(float x, float y, float z, float a, float b, float c) {
+    //todo constrain the target pose here. E.g 4 axis robot B=PI C=0...
     this->targetPoseBuffer[0] = x;
     this->targetPoseBuffer[1] = y;
     this->targetPoseBuffer[2] = z;
@@ -182,13 +198,9 @@ void RobotController::_setTargetPose(float x, float y, float z, float a, float b
     this->state = PREPARE_MOVE;
 }
 
-void RobotController::getCurrentAngles(float currentAngles[]) {
-    for (unsigned int i = 0; i < NUMBER_OF_AXIS; i++) {
-        currentAngles[i] = this->Servos[i]->getCurrentAngleExcludingOffset();
-    }
-}
-
 void RobotController::setTargetAngles(float targetAngles[6]) {
+    //todo constrain the target angles here. E.g 4 axis robot A4 = -(A1+A2)
+
     float TCP[6];
 
     // complicated way, since interpolation method may still be linear, so we need the target pos anyways
@@ -328,6 +340,12 @@ void RobotController::process() {
             }
         }
 
+        // for (size_t i = 0; i < 6; i++) { todo stop all on out of range?
+        //     if (servos[i]->getOutOfRange()) {
+        //
+        //     }
+        // }
+
         if (atTargetAngle) {
             logger.info("at Target angle");
             logger.info(currentInterpolationStep);
@@ -364,6 +382,14 @@ void RobotController::process() {
                           this->targetPoseBuffer[5],
                           this->targetAngleBuffer);
 
+        // delay(5000);
+        // Serial.println(this->targetAngleBuffer[0]);
+        // Serial.println(this->targetAngleBuffer[1]);
+        // Serial.println(this->targetAngleBuffer[2]);
+        // Serial.println(this->targetAngleBuffer[3]);
+        // Serial.println(this->targetAngleBuffer[4]);
+        // Serial.println(this->targetAngleBuffer[5]);
+        // delay(25000);
         // Serial.println(this->targetPoseBuffer[0]);
         // Serial.println(this->targetPoseBuffer[1]);
         // Serial.println(this->targetPoseBuffer[2]);
@@ -433,7 +459,7 @@ void RobotController::process() {
             int angleSteps    = this->interpolationRotationAngle / this->interpolationOrientationAngleIncrement;
 
             // todo use (distanceSteps>angleSteps)?distanceSteps:angleSteps
-            totalInterpolationSteps = 40;
+            totalInterpolationSteps = 15;
             break;
         }
 
@@ -597,29 +623,31 @@ void RobotController::process() {
         // Serial.println(dTime*1000);
 
         if (returnCode == Kinematic::OK) {
-          Serial.println("--- A B C ---");
-          Serial.println(targetAngles[0]);
-          Serial.println(targetAngles[1]);
-          Serial.println(targetAngles[2]);
-          Serial.println(targetAngles[3]);
-          Serial.println(targetAngles[4]);
-          Serial.println(targetAngles[5]);
-          Serial.println("-----");
+            // Serial.println("--- A B C ---");
+            // Serial.println(targetAngles[0]);
+            // Serial.println(targetAngles[1]);
+            // Serial.println(targetAngles[2]);
+            // Serial.println(targetAngles[3]);
+            // Serial.println(targetAngles[4]);
+            // Serial.println(targetAngles[5]);
+            // Serial.println("-----");
+
             // this->kinematicCoupling(targetAngles);
+            if (!this->moveAsFarAsPossibleOnOutOfBound)
+                for (size_t i = 0; i < NUMBER_OF_AXIS; i++) { // todo remove check here. change notation of logic angles
+                    // todo pass custom checking function to comprise 4 Axis kinematic coupled robots
+                    if ((targetAngles[i] < this->Servos[i]->getMinRadAngle()) || (targetAngles[i] > this->Servos[i]->getMaxRadAngle())) {
+                        logger.warning("servo " + String(i) + " is out of angle: " + String(targetAngles[i] / PI * 180) + " min: " +
+                                       String(this->Servos[i]->getMinRadAngle() / PI * 180) + " max " + String(
+                                           this->Servos[i]->getMaxRadAngle() / PI * 180));
 
-            for (size_t i = 0; i < NUMBER_OF_AXIS; i++) { // todo remove check here. change notation of logic angles
-                if ((targetAngles[i] < this->Servos[i]->getMinRadAngle()) || (targetAngles[i] > this->Servos[i]->getMaxRadAngle())) {
-                    logger.warning("servo " + String(i) + " is out of angle: " + String(targetAngles[i] / PI * 180) + " min: " +
-                                   String(this->Servos[i]->getMinRadAngle() / PI * 180) + " max " + String(
-                                       this->Servos[i]->getMaxRadAngle() / PI * 180));
 
-
-                    outOfAngle = true;
+                        outOfAngle = true;
+                    }
                 }
-            }
 
             // todo handle singularity
-            if (abs(targetAngles[4] - (PI / 2)) < 0.05) { // axis 5 and 3 in line
+            if (abs(targetAngles[4] - (PI / 2f)) < 0.05) { // axis 5 and 3 in line
                 Serial.println("singularity axis 5,3");
 
                 targetAngles[3] = this->Servos[3]->getCurrentAngleExcludingOffset();
@@ -631,12 +659,6 @@ void RobotController::process() {
                 this->_applyTimedTargetAngles(targetAngles, dTime);
                 this->state = MOVING;
             } else if (this->moveAsFarAsPossibleOnOutOfBound) { // todo rename outOfAngle
-                for (size_t i = 0; i < 6; i++) {
-                    // if (targetAngles[i] < this->Servos[i]->getMinRadAngle()) targetAngles[i] = this->Servos[i]->getMinRadAngle();
-                    // if (targetAngles[i] > this->Servos[i]->getMaxRadAngle()) targetAngles[i] = this->Servos[i]->getMaxRadAngle();
-                    constrain(targetAngles[i], this->Servos[i]->getMinRadAngle(), this->Servos[i]->getMaxRadAngle());
-                }
-
                 // Serial.println("A5 "+String(targetAngles[5]/PI*180));
                 this->_applyTimedTargetAngles(targetAngles, dTime);
                 this->state = MOVING;

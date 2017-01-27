@@ -46,11 +46,13 @@ public:
 
     float        getMaxAngleVelocity();
 
+    bool         getOutOfRange();
+
     bool         atTargetAngle();
 
     void         process(unsigned int deltaT = DELTA_T);
 
-    float getHomeRadAngle();
+    float        getHomeRadAngle();
 
 private:
 
@@ -74,6 +76,8 @@ private:
 
     float currentAngleVelocity;
     float maxAngleVelocity;
+
+    bool outOfRange = false;
 
     Servo servo;
 
