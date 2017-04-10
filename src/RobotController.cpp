@@ -7,6 +7,12 @@ namespace {
 Logger logger("RobotController");
 }
 
+#ifndef physicaltoLogicAngles
+# define physicaltoLogicAngles(angles) { \
+        (angles)[2] -= (angles)[1];      \
+}
+#endif // ifndef
+
 // no kinematic coupling here because it must happen step by step in the servo update method to be able to move kincouping independent from
 // speed
 #define NORM(v, u, length) {                                                  \
@@ -45,11 +51,15 @@ Logger logger("RobotController");
 
 #define NUMBER_OF_AXIS 6
 
-RobotController::RobotController(MyServo *servos[], Kinematic *Kin) {
+RobotController::RobotController(MyServo *servos[], Kinematic *Kin, void(*logicToPhysicalAngles)(float[6])) {
     for (size_t i = 0; i < NUMBER_OF_AXIS; i++) {
         this->Servos[i] = servos[i];
+
+        logicAngleLimits[i][0] = servos[i]->getMaxRadAngle();
+        logicAngleLimits[i][1] = servos[i]->getMinRadAngle();
     }
 
+    this->logicToPhysicalAngles = logicToPhysicalAngles;
 
     this->IK = Kin;
 
@@ -63,20 +73,12 @@ RobotController::RobotController(MyServo *servos[], Kinematic *Kin) {
 
     this->maxVelocity = 70; // in units per s
 
-    this->moveAsFarAsPossibleOnOutOfBound = true;
+    this->moveAsFarAsPossibleOnOutOfBound = false;
 
-    // this->targetAngleBuffer = { 0, 0, 0, 0, 0, 0 };
-    this->getCurrentAngles(this->targetAngleBuffer);
+    this->getCurrentLogicAngles(this->targetAngleBuffer);
 
     this->setTargetAngles(this->targetAngleBuffer);
 
-    // delay(5000);
-    // Serial.println(this->targetAngleBuffer[0]);
-    // Serial.println(this->targetAngleBuffer[1]);
-    // Serial.println(this->targetAngleBuffer[2]);
-    // Serial.println(this->targetAngleBuffer[3]);
-    // Serial.println(this->targetAngleBuffer[4]);
-    // Serial.println(this->targetAngleBuffer[5]);
     this->process();
 }
 
@@ -175,16 +177,16 @@ void RobotController::setTargetPose(POSITION position, float value) {
     this->state = PREPARE_MOVE;
 }
 
-void RobotController::getCurrentAngles(float currentAngles[]) {
+void RobotController::getCurrentLogicAngles(float currentAngles[]) {
     for (unsigned int i = 0; i < NUMBER_OF_AXIS; i++) {
-        currentAngles[i] = this->Servos[i]->getCurrentAngleExcludingOffset();
+        currentAngles[i] = this->Servos[i]->getCurrentAngle();
     }
 }
 
 // todo add stop method() targetPose = currentPose
 
 void RobotController::_setTargetPose(float x, float y, float z, float a, float b, float c) {
-    //todo constrain the target pose here. E.g 4 axis robot B=PI C=0...
+    // todo constrain the target pose here. E.g 4 axis robot B=PI C=0...
     this->targetPoseBuffer[0] = x;
     this->targetPoseBuffer[1] = y;
     this->targetPoseBuffer[2] = z;
@@ -199,7 +201,7 @@ void RobotController::_setTargetPose(float x, float y, float z, float a, float b
 }
 
 void RobotController::setTargetAngles(float targetAngles[6]) {
-    //todo constrain the target angles here. E.g 4 axis robot A4 = -(A1+A2)
+    // todo constrain the target angles here. E.g 4 axis robot A4 = -(A1+A2)
 
     float TCP[6];
 
@@ -253,7 +255,7 @@ void RobotController::_applyTimedTargetAngles(float targetAngles[6], float targe
 
     // todo take into account that the target angle may be out of angle and thus be far away
     for (unsigned int i = 0; i < NUMBER_OF_AXIS; i++) {
-        float dAngle = abs(targetAngles[i] - this->Servos[i]->getCurrentAngleExcludingOffset());
+        float dAngle = abs(targetAngles[i] - this->Servos[i]->getCurrentAngle());
         float dTime  = dAngle / this->Servos[i]->getMaxAngleVelocity();
 
         if (dTime > maxTime) maxTime = dTime;
@@ -267,7 +269,7 @@ void RobotController::_applyTimedTargetAngles(float targetAngles[6], float targe
     // Serial.println(targetAngles[5]);
     if (maxTime != 0) {
         for (unsigned int j = 0; j < NUMBER_OF_AXIS; j++) {
-            float dAngle = abs(targetAngles[j] - this->Servos[j]->getCurrentAngleExcludingOffset());
+            float dAngle = abs(targetAngles[j] - this->Servos[j]->getCurrentAngle());
             this->Servos[j]->setCurrentAngleVelocity(dAngle / maxTime);
             this->Servos[j]->setTargetRadAngle(targetAngles[j]);
         }
@@ -276,7 +278,7 @@ void RobotController::_applyTimedTargetAngles(float targetAngles[6], float targe
 
 void RobotController::getTargetAngles(float targetAngles[]) {
     for (unsigned int i = 0; i < NUMBER_OF_AXIS; i++) {
-        targetAngles[i] = this->Servos[i]->getTargetRadAngleExcludingOffset();
+        targetAngles[i] = this->Servos[i]->getTargetRadAngle();
     }
 }
 
@@ -285,17 +287,23 @@ float RobotController::getTargetAngle(unsigned int index) {
         Serial.print("WARING, can not getTargetAngle(), out of index");
         return 0;
     }
-    return this->Servos[index]->getTargetRadAngleExcludingOffset();
+    return this->Servos[index]->getTargetRadAngle();
 }
 
 void RobotController::getCurrentPose(float Pose[6]) {
+    float angles[6];
+
+    for (size_t i = 0; i < 6; i++) {
+        angles[i] = this->Servos[i]->getCurrentAngle();
+    }
+    physicaltoLogicAngles(angles);
     this->IK->forward(
-        this->Servos[0]->getCurrentAngleExcludingOffset(),
-        this->Servos[1]->getCurrentAngleExcludingOffset(),
-        this->Servos[2]->getCurrentAngleExcludingOffset(),
-        this->Servos[3]->getCurrentAngleExcludingOffset(),
-        this->Servos[4]->getCurrentAngleExcludingOffset(),
-        this->Servos[5]->getCurrentAngleExcludingOffset(),
+        angles[0],
+        angles[1],
+        angles[2],
+        angles[3],
+        angles[4],
+        angles[5],
         Pose
         );
 }
@@ -315,6 +323,19 @@ bool RobotController::PoseEquals(float pos1[6], float pos2[6]) {
         }
     }
     return true;
+}
+
+void RobotController::setLogicAngleLimits(float angleLimitsRad[6][2]) {
+    for (size_t i = 0; i < 6; i++) {
+        this->logicAngleLimits[i][0] = angleLimitsRad[i][0];
+        this->logicAngleLimits[i][1] = angleLimitsRad[i][1];
+    }
+}
+
+void RobotController::getCurrentPhysicalAngles(float angles[6]) {
+
+    getCurrentLogicAngles(angles);
+    this->logicToPhysicalAngles(angles);
 }
 
 void RobotController::process() {
@@ -398,7 +419,8 @@ void RobotController::process() {
         // Serial.println(this->targetPoseBuffer[5]);
         // memcpy(this->startAngles,  this->targetAngleBuffer,       6 * sizeof(float)); // todo use current pose
 
-        memcpy(this->startPose,  this->targetPose,       6 * sizeof(float)); // todo use current pose
+        this->getCurrentPose(this->startPose); // todo use current pose
+        // memcpy(this->startPose,  this->targetPose,       6 * sizeof(float)); // todo use current pose
         memcpy(this->targetPose, this->targetPoseBuffer, 6 * sizeof(float));
 
         currentInterpolationStep = 0;
@@ -459,7 +481,7 @@ void RobotController::process() {
             int angleSteps    = this->interpolationRotationAngle / this->interpolationOrientationAngleIncrement;
 
             // todo use (distanceSteps>angleSteps)?distanceSteps:angleSteps
-            totalInterpolationSteps = 15;
+            totalInterpolationSteps = 20;
             break;
         }
 
@@ -618,6 +640,7 @@ void RobotController::process() {
             targetAngles
             );
 
+        // todo set current angle to last angle if out of angle... or set to current servo position
         bool outOfAngle = false;
 
         // Serial.println(dTime*1000);
@@ -631,27 +654,42 @@ void RobotController::process() {
             // Serial.println(targetAngles[4]);
             // Serial.println(targetAngles[5]);
             // Serial.println("-----");
+            //
+            // targetAngles[2] += targetAngles[1];
 
-            // this->kinematicCoupling(targetAngles);
-            if (!this->moveAsFarAsPossibleOnOutOfBound)
-                for (size_t i = 0; i < NUMBER_OF_AXIS; i++) { // todo remove check here. change notation of logic angles
-                    // todo pass custom checking function to comprise 4 Axis kinematic coupled robots
-                    if ((targetAngles[i] < this->Servos[i]->getMinRadAngle()) || (targetAngles[i] > this->Servos[i]->getMaxRadAngle())) {
-                        logger.warning("servo " + String(i) + " is out of angle: " + String(targetAngles[i] / PI * 180) + " min: " +
-                                       String(this->Servos[i]->getMinRadAngle() / PI * 180) + " max " + String(
-                                           this->Servos[i]->getMaxRadAngle() / PI * 180));
+            for (size_t i = 0; i < NUMBER_OF_AXIS; i++) { // todo remove check here. change notation of logic angles
+                // todo pass custom checking function to comprise 4 Axis kinematic coupled robots
+                if ((targetAngles[i] < this->logicAngleLimits[i][0]) || (targetAngles[i] > this->logicAngleLimits[i][1])) {
+                    logger.warning("servo " + String(i) + " is out of logic angle: " + String(targetAngles[i] / PI * 180) + " min: "
+                                   + String(this->logicAngleLimits[i][0] / PI * 180) + " max "
+                                   + String(this->logicAngleLimits[i][1] / PI * 180));
 
 
-                        outOfAngle = true;
-                    }
+                    outOfAngle = true;
                 }
+            }
+
+            this->logicToPhysicalAngles(targetAngles);
+
+
+            for (size_t i = 0; i < NUMBER_OF_AXIS; i++) { // todo remove check here. change notation of logic angles
+                // todo pass custom checking function to comprise 4 Axis kinematic coupled robots
+                if ((targetAngles[i] < this->Servos[i]->getMinRadAngle()) || (targetAngles[i] > this->Servos[i]->getMaxRadAngle())) {
+                    logger.warning("servo " + String(i) + " is out of physical angle: " + String(targetAngles[i] / PI * 180) + " min: "
+                                   + String(this->Servos[i]->getMinRadAngle() / PI * 180) + " max "
+                                   + String(this->Servos[i]->getMaxRadAngle() / PI * 180));
+
+
+                    outOfAngle = true;
+                }
+            }
 
             // todo handle singularity
-            if (abs(targetAngles[4] - (PI / 2f)) < 0.05) { // axis 5 and 3 in line
+            if (abs(targetAngles[4] - (PI / 2.0)) < 0.05) { // axis 5 and 3 in line
                 Serial.println("singularity axis 5,3");
 
-                targetAngles[3] = this->Servos[3]->getCurrentAngleExcludingOffset();
-                targetAngles[5] = this->Servos[5]->getCurrentAngleExcludingOffset();
+                targetAngles[3] = this->Servos[3]->getCurrentAngle();
+                targetAngles[5] = this->Servos[5]->getCurrentAngle();
             }
 
             if (!outOfAngle) {

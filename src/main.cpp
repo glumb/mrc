@@ -9,6 +9,7 @@
 #include "Display.h"
 #include "IOLogic.h"
 #include "AdditionalAxisController.h"
+#include "WaitController.h"
 
 // ---- I2C do not change! ----
 #define pin_sda   18
@@ -23,25 +24,16 @@ Kinematic *Kin;
 RobotController *RoboCon;
 Display Display;
 IOLogic IOLogic;
+WaitController WaitController;
 AdditionalAxisController *AxisController;
 handleSerialCommand *serialCommand;
 
 #define SERVOMIN  200  // usually 1000us
 #define SERVOMAX  2800 // usually 2000us
 
+#define updateServosEveryMs 15
 
 Logger mainLogger("main");
-
-// pinNumber, maxAngularVel degree/sec, calibMin, calibMax, angleDegMin, angleDegMax, home position
-// const float servoConfig[6][6] = {
-//     { pin_servo_0,     160,    542,   2220,    -90,     90 },
-//     { pin_servo_1,     160,   2034,    600,    -90,     62 }, //
-//     { pin_servo_2,     160,    548,   2380,   -135,     40 },
-//     { pin_servo_3,     160,    760,   2234,    -90,     75 },
-//     { pin_servo_4,     160,   2360,    793,    -20,    135 },
-//     { pin_servo_5,     160,   2300,    600,   -360,    360 }
-// };
-
 
 void setup()
 {
@@ -53,7 +45,7 @@ void setup()
     Display.displayText(0, 0, "STARTING");
     Display.displayRobotGeometry(geometry);
     Display.show();
-    delay(5000);
+    delay(2000);
 
     // --- init servos ---
 
@@ -82,13 +74,19 @@ void setup()
     }
 
 
-    Kin = new Kinematic(geometry, robotType);
+    Kin = new Kinematic(geometry);
 
     Display.displayText(0, 8 * 1, "KIN");
     Display.show();
     delay(500);
 
-    RoboCon = new RobotController(servos, Kin);
+    RoboCon = new RobotController(servos, Kin, logicToPhysicalAngles); // todo make function optional
+
+    for (size_t i = 0; i < 6; i++) {
+        logicAngleLimits[i][0] = logicAngleLimits[i][0] / 180 * PI;
+        logicAngleLimits[i][1] = logicAngleLimits[i][1] / 180 * PI;
+    }
+    RoboCon->setLogicAngleLimits(logicAngleLimits);
 
     Display.displayText(0, 8 * 2, "Con");
     Display.show();
@@ -100,7 +98,7 @@ void setup()
     Display.show();
     delay(500);
 
-    serialCommand = new handleSerialCommand(RoboCon, IOLogic, AxisController);
+    serialCommand = new handleSerialCommand(RoboCon, IOLogic, AxisController, WaitController);
 
     // RoboCon->setTargetPose(18, 18, -10, PI, 0, 0);
     RoboCon->setMovementMethod(RobotController::MOVEMENT_METHODS::LINEAR);
@@ -111,28 +109,32 @@ void setup()
     // RoboCon->setTargetAngle(1,-10.0/180.0*PI);
     // RoboCon->setTargetAngle(2,-10.0/180.0*PI);
 
-    Timer1.initialize(20 * 1000); // 20ms
+    Timer1.initialize(updateServosEveryMs * 1000); // 20ms
 
 
     Timer1.attachInterrupt(updateServos);
 }
 
-void updateServos() {
-    for (size_t i = 0; i < 8; i++) {
-        servos[i]->process(20);
+volatile long timer;
 
-        kinematic_coupling(servos, i);
+void updateServos() {
+    timer = micros();
+
+    for (size_t i = 0; i < 8; i++) {
+        servos[i]->process(updateServosEveryMs);
     }
 
     // important: move to loop when debugging (Serial.print needs ISR)
     // todo use volatile and ATOMIC on angle buffer and stuff
     RoboCon->process();
+
+    timer = micros() - timer;
 }
 
 void renderDisplay() {
     Display.clear();
-    Display.displayRobot(Kin, servos, 10, 20, 0.5, 1);
-    Display.displayRobot(Kin, servos, 35, 28, 0.5, 0);
+    Display.displayRobot(Kin, RoboCon, 10, 20, 0.5, 1);
+    Display.displayRobot(Kin, RoboCon, 35, 28, 0.5, 0);
 
 
     // Display.displayBars(64, 8, 64, 6 * 4, servos);
@@ -200,6 +202,7 @@ void loop()
     if (displayCounter++ >= 10000) {
         renderDisplay();
         displayCounter = 0;
+        // Serial.println(timer);
     }
 
     // mainLogger.time("after Display");

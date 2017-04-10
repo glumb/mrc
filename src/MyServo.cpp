@@ -6,12 +6,10 @@ namespace {
 Logger logger("MyServo");
 }
 
-/**
- * handles angle offset induces by kinematic coupling
- * angle excluding offset represents the logical angle used for calculations
- * angle including offset represents the physical servo angle
- */
 
+/**
+ *
+ */
 MyServo::MyServo(int          pinNumber,
                  float        maxAngleVelocity,
                  unsigned int minFreq,
@@ -36,6 +34,7 @@ MyServo::MyServo(int          pinNumber,
         logger.error("minRadAngle must be smaller than maxRadAngle. Servo pin number: " + String(pinNumber));
     }
 
+    this->startAngle   = homeRadAngle;
     this->currentAngle = homeRadAngle;
     this->targetAngle  = homeRadAngle;
     this->homeAngle    = homeRadAngle;
@@ -94,33 +93,14 @@ float MyServo::getCurrentAngle() { // physical angle
 
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
-        result = this->currentAngle + this->offsetAngle;
-    }
-    return result;
-}
-
-float MyServo::getCurrentAngleExcludingOffset() { // logical angle
-    float result;
-
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-    {
         result = this->currentAngle;
     }
     return result;
 }
 
 void MyServo::setTargetRadAngle(float angleRad) {
-    /*logger.info("inside servo set angle");
-       logger.info(angleRad);
-       logger.info("inside servo min angle");
-       logger.info(this->minRadAngle);
-       logger.info("inside servo max angle");
-       logger.info(this->maxRadAngle);
-     */
-
-    // account for offsetAngle
-    // todo maybe just constrain() here in logic angles and in the move method on the overall (offset+target) target angle
-
+    this->startAngle  = this->currentAngle;
+    this->elapsedTime = 0;
     this->targetAngle = angleRad;
 }
 
@@ -128,19 +108,7 @@ void MyServo::setFreqency(long microseconds) {
     if (!this->virtualServo) this->servo.writeMicroseconds(microseconds);
 }
 
-void MyServo::setOffset(float angleRad) {
-    this->offsetAngle = angleRad;
-}
-
-float MyServo::getOffset() {
-    return this->offsetAngle;
-}
-
 float MyServo::getTargetRadAngle() {
-    return this->targetAngle + this->offsetAngle;
-}
-
-float MyServo::getTargetRadAngleExcludingOffset() {
     return this->targetAngle;
 }
 
@@ -163,26 +131,36 @@ float MyServo::getMaxAngleVelocity() {
 }
 
 void MyServo::process(unsigned int deltaT) {
-    // if ((micros() - this->lastUpdate) > deltaT * 1000) {
+    // v = s/t
+    this->elapsedTime += deltaT;
 
-    // logger.info((micros() - this->lastUpdate));
-    // logger.info(this->maxAngleVelocity);
 
-    // this->lastUpdate = micros();
+    float deltaAngle = this->currentAngleVelocity * this->elapsedTime / 1000.0;
 
-    // todo use lerp between start and target angle to avoid incremental error
-    float deltaAngle    = this->targetAngle - this->currentAngle;
-    float deltaTSeconds = (float)deltaT / 1000.0;
+    // Serial.println(deltaAngle);
 
-    if (abs(deltaAngle) > this->currentAngleVelocity * deltaTSeconds) {
-        if (deltaAngle > 0) {
-            this->currentAngle = this->currentAngle + this->currentAngleVelocity * deltaTSeconds;
-        } else {
-            this->currentAngle = this->currentAngle - this->currentAngleVelocity * deltaTSeconds;
-        }
-    } else {
+    if (abs(deltaAngle) > abs(this->targetAngle - this->startAngle)) {
         this->currentAngle = this->targetAngle;
+
+        // set start to target to not move again on elapsed time overflow ~50 days?
+        this->startAngle = this->targetAngle;
+    } else {
+        if (this->targetAngle > this->startAngle) {
+            this->currentAngle = this->startAngle + deltaAngle;
+        } else {
+            this->currentAngle = this->startAngle - deltaAngle;
+        }
     }
+
+    // if (abs(deltaAngle) > this->currentAngleVelocity * deltaTSeconds) {
+    //     if (deltaAngle > 0) {
+    //         this->currentAngle = this->currentAngle + this->currentAngleVelocity * deltaTSeconds;
+    //     } else {
+    //         this->currentAngle = this->currentAngle - this->currentAngleVelocity * deltaTSeconds;
+    //     }
+    // } else {
+    //     this->currentAngle = this->targetAngle;
+    // }
 
     this->move();
 
@@ -200,22 +178,8 @@ void MyServo::move() {
 
     // add offset angle here, to move it at full speed, since its only used for kinemtic coupling of servos
     unsigned int freq = int(
-        this->map_float(this->currentAngle + this->offsetAngle, this->minRadAngle, this->maxRadAngle, this->minFreq, this->maxFreq)
+        this->map_float(this->currentAngle, this->minRadAngle, this->maxRadAngle, this->minFreq, this->maxFreq)
         );
-
-    this->outOfRange = false;
-
-    if (this->maxFreq > this->minFreq) {
-        if ((freq < this->minFreq) || (freq > this->maxFreq)) {
-            this->outOfRange = true;
-            return;
-        }
-    } else {
-        if ((freq > this->minFreq) || (freq < this->maxFreq)) {
-            this->outOfRange = true;
-            return;
-        }
-    }
 
     if (!this->virtualServo) this->servo.writeMicroseconds(freq);
 }

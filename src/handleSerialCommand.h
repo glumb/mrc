@@ -3,14 +3,15 @@
 #include "Logger.h"
 #include "RobotController.h"
 #include "AdditionalAxisController.h"
+#include "WaitController.h"
 
 namespace {
 Logger logger("handleSerialCommand");
 }
 
-#define SRIL_OptionAndValueBufferSize 10
+#define MRIL_OptionAndValueBufferSize 10
 
-#define SRIL_BUFFER_SIZE 128
+#define MRIL_BUFFER_SIZE 228
 
 #define AUTO_OPEN_FRAME true
 
@@ -21,54 +22,65 @@ Logger logger("handleSerialCommand");
 #define DEG_2_RAD ((1f / 180f) * PI)
 #define RAD_2_DEG ((1f / PI) * 180)
 
-const unsigned char SRCP_START = 'S';
-const unsigned char SRCP_END   = '\r';
+const  char MRCP_START = 'S';
 
-const unsigned char SRCP_COMMAND_QUEUE_IN     = 'Q';
-const unsigned char SRCP_COMMAND_MOVE_TO      = 'G';
-const unsigned char SRCP_COMMAND_HALT         = 'H';
-const unsigned char SRCP_COMMAND_GET_ANGLE    = 'L';
-const unsigned char SRCP_COMMAND_GET_POSITION = 'P';
-const unsigned char SRCP_COMMAND_TEST         = 'T';
+// const  char MRCP_END   = '\r';
+const  char MRCP_END = 'E';
 
-const unsigned char SRIL_COMMAND_MOVE     = 'M';
-const unsigned char SRIL_COMMAND_LOGIC    = 'L';
-const unsigned char SRIL_COMMAND_SET_X    = 'X';
-const unsigned char SRIL_COMMAND_SET_Y    = 'Y';
-const unsigned char SRIL_COMMAND_SET_Z    = 'Z';
-const unsigned char SRIL_COMMAND_SET_A    = 'A';
-const unsigned char SRIL_COMMAND_SET_B    = 'B';
-const unsigned char SRIL_COMMAND_SET_C    = 'C';
-const unsigned char SRIL_COMMAND_ROTATE   = 'R';
-const unsigned char SRIL_COMMAND_VELOCITY = 'V';
+const  char MRCP_COMMAND_QUEUE_IN = 'Q';
+const  char MRCP_COMMAND_MOVE_TO  = 'G';
 
-const unsigned int SRIL_MOVEMENT_METHOD_P2P      = 0;
-const unsigned int SRIL_MOVEMENT_METHOD_LINEAR   = 1;
-const unsigned int SRIL_MOVEMENT_METHOD_CIRCULAR = 2;
+
+const  char MRIL_COMMAND_MOVE         = 'M';
+const  char MRIL_COMMAND_LOGIC_INPUT  = 'I';
+const  char MRIL_COMMAND_LOGIC_OUTPUT = 'O';
+const  char MRIL_COMMAND_SET_X        = 'X';
+const  char MRIL_COMMAND_SET_Y        = 'Y';
+const  char MRIL_COMMAND_SET_Z        = 'Z';
+const  char MRIL_COMMAND_SET_A        = 'A';
+const  char MRIL_COMMAND_SET_B        = 'B';
+const  char MRIL_COMMAND_SET_C        = 'C';
+const  char MRIL_COMMAND_ROTATE       = 'R';
+const  char MRIL_COMMAND_VELOCITY     = 'V';
+const  char MRIL_COMMAND_WAIT         = 'W';
+
+const  char MRIL_COMMAND_HALT         = 'H';
+const  char MRIL_COMMAND_GET_ANGLE    = 'L';
+const  char MRIL_COMMAND_GET_POSITION = 'P';
+const  char MRIL_COMMAND_TEST         = 'T';
+const  char MRIL_COMMAND_NUMBER       = 'N';
+
+const unsigned int MRIL_MOVEMENT_METHOD_P2P      = 0;
+const unsigned int MRIL_MOVEMENT_METHOD_LINEAR   = 1;
+const unsigned int MRIL_MOVEMENT_METHOD_CIRCULAR = 2;
 
 // todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
 
 class handleSerialCommand {
 public:
 
-    handleSerialCommand(RobotController *rc, IOLogic IOLogic, AdditionalAxisController *AxisCon) :
-        SRILRingBuffer(SRIL_BUFFER_SIZE),
-        robotController(rc), Logic(IOLogic),
-        AxisController(AxisCon) {}
+    handleSerialCommand(RobotController *rc, IOLogic IOLogic, AdditionalAxisController *AxisCon, WaitController WaitCon) :
+        MRILRingBuffer(MRIL_BUFFER_SIZE),
+        robotController(rc),
+        Logic(IOLogic),
+        AxisController(AxisCon),
+        WaitCon(WaitCon) {}
 
-    void consumeSRILFromBuffer() {
+    void consumeMRILFromBuffer() {
+        this->commandNumber = -1;
+
         unsigned char c      = 0;
         unsigned char symbol = '\0';
-        char optionsAndValue[SRIL_OptionAndValueBufferSize];
+        char optionsAndValue[MRIL_OptionAndValueBufferSize];
         unsigned char optionsAndValuePointer = 0;
 
         // Serial.println("consuming");
 
-        if (SRILRingBuffer.getSize() > 0) { // buffer is not empty
+        if (MRILRingBuffer.getSize() > 0) { // buffer is not empty
             this->robotController->startTransaction();
 
             while (c != RingBuffer::END) {
-                c = SRILRingBuffer.getByte();
+                c = MRILRingBuffer.getByte();
                 logger.info("ringBuffer parse char " + String((char)c));
 
 
@@ -77,30 +89,30 @@ public:
                         optionsAndValue[optionsAndValuePointer] = '\0';   // NULL terminate to form a string
 
                         switch (symbol) {
-                        case SRIL_COMMAND_MOVE: {
+                        case MRIL_COMMAND_MOVE: {
                             unsigned int movementMethodCode = atoi(optionsAndValue);
-                            logger.info("SRIL_COMMAND_MOVE " + String(movementMethodCode));
+                            logger.info("MRIL_COMMAND_MOVE " + String(movementMethodCode));
 
                             switch (movementMethodCode) {
-                            case SRIL_MOVEMENT_METHOD_P2P:
-                                logger.info("SRIL_MOVEMENT_METHOD_P2P");
+                            case MRIL_MOVEMENT_METHOD_P2P:
+                                logger.info("MRIL_MOVEMENT_METHOD_P2P");
 
                                 robotController->setMovementMethod(RobotController::MOVEMENT_METHODS::P2P);
                                 break;
 
-                            case SRIL_MOVEMENT_METHOD_LINEAR:
-                                logger.info("SRIL_MOVEMENT_METHOD_LINEAR");
+                            case MRIL_MOVEMENT_METHOD_LINEAR:
+                                logger.info("MRIL_MOVEMENT_METHOD_LINEAR");
                                 robotController->setMovementMethod(RobotController::MOVEMENT_METHODS::LINEAR);
                                 break;
 
-                            case SRIL_MOVEMENT_METHOD_CIRCULAR:
+                            case MRIL_MOVEMENT_METHOD_CIRCULAR:
                                 Serial.println("CIRCULAR not implemented");
                                 break;
                             }
                             break;
                         }
 
-                        case SRIL_COMMAND_VELOCITY:
+                        case MRIL_COMMAND_VELOCITY:
                         {
                             float value = atof(optionsAndValue); //  V<val>
 
@@ -109,7 +121,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_SET_X:
+                        case MRIL_COMMAND_SET_X:
                         {
                             float value = atof(optionsAndValue); // shift one because option V<opt><val>
                             logger.info("setting x to: " + String(value));
@@ -118,7 +130,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_SET_Y:
+                        case MRIL_COMMAND_SET_Y:
                         {
                             float value = atof(optionsAndValue); // shift one because option V<opt><val>
                             logger.info("setting y to: " + String(value));
@@ -127,7 +139,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_SET_Z:
+                        case MRIL_COMMAND_SET_Z:
                         {
                             float value = atof(optionsAndValue); // shift one because option V<opt><val>
                             logger.info("setting z to: " + String(value));
@@ -136,7 +148,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_SET_A:
+                        case MRIL_COMMAND_SET_A:
                         {
                             float value = atof(optionsAndValue); // shift one because option V<opt><val>
                             Serial.println(value);
@@ -145,7 +157,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_SET_B:
+                        case MRIL_COMMAND_SET_B:
                         {
                             float value = atof(optionsAndValue); // shift one because option V<opt><val>
                             Serial.println(value);
@@ -154,7 +166,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_SET_C:
+                        case MRIL_COMMAND_SET_C:
                         {
                             float value = atof(optionsAndValue); // shift one because option V<opt><val>
                             Serial.println(value);
@@ -163,7 +175,7 @@ public:
                             break;
                         }
 
-                        case SRIL_COMMAND_ROTATE:                               // S M R4 1.12345 E
+                        case MRIL_COMMAND_ROTATE:                               // S M R4 1.12345 E
                         {
                             float value         = atof(optionsAndValue + 1);
                             unsigned int option = (int)optionsAndValue[0] - 48; // shift one because option V<opt><val>
@@ -198,7 +210,7 @@ public:
                             break;
                         }
 
-                        case 'I':                                              // S Q L I1 9 E
+                        case MRIL_COMMAND_LOGIC_INPUT:                         // S Q L I1 9 E
                         {                                                      // I<pin><state>
                             unsigned int pin   = (int)optionsAndValue[0] - 48;
                             unsigned int state = (int)optionsAndValue[1] - 48; // shift one because option I<opt><val>
@@ -207,12 +219,56 @@ public:
                             break;
                         }
 
-                        case 'O':                                              // S Q L O1 8 E     S Q L O0 8 E
+                        case MRIL_COMMAND_LOGIC_OUTPUT:                        // S Q L O1 8 E     S Q L O0 8 E
                         {                                                      // O<state><pin>
                             unsigned int pin   = (int)optionsAndValue[0] - 48;
                             unsigned int state = (int)optionsAndValue[1] - 48; // shift one because option I<opt><val>
 
                             Logic.setOutput(pin, state);
+                            break;
+                        }
+
+                        case MRIL_COMMAND_WAIT:
+                        { // W<ms>
+                            unsigned long ms = atol(optionsAndValue);
+
+                            this->WaitCon.waitMs(ms);
+                            break;
+                        }
+
+                        case MRIL_COMMAND_NUMBER:
+                        { // N<number>
+                          // float value = atof(optionsAndValue);
+                            this->commandNumber = atoi(optionsAndValue);
+                            this->sendMessage(String(MRIL_COMMAND_NUMBER) + "0" + String(this->commandNumber));
+
+                            break;
+                        }
+
+                        case MRIL_COMMAND_TEST:
+
+                            break;
+
+                        case MRIL_COMMAND_HALT:
+                        case MRIL_COMMAND_GET_ANGLE:
+                            break;
+
+                        case MRIL_COMMAND_GET_POSITION:
+                        {
+                            float currentPose[6];
+                            robotController->getCurrentPose(currentPose);
+                            Serial.print("X ");
+                            Serial.print(currentPose[0]);
+                            Serial.print(" Y ");
+                            Serial.print(currentPose[1]);
+                            Serial.print(" Z ");
+                            Serial.print(currentPose[2]);
+                            Serial.print(" A ");
+                            Serial.print(currentPose[3]);
+                            Serial.print(" B ");
+                            Serial.print(currentPose[4]);
+                            Serial.print(" C ");
+                            Serial.println(currentPose[5]);
                             break;
                         }
 
@@ -229,7 +285,7 @@ public:
                     optionsAndValue[optionsAndValuePointer] = c;
                     optionsAndValuePointer++;
 
-                    if (optionsAndValuePointer >= SRIL_OptionAndValueBufferSize) {
+                    if (optionsAndValuePointer >= MRIL_OptionAndValueBufferSize) {
                         Serial.println("max option and value size exceeded");
                     }
                 } else  {
@@ -239,7 +295,7 @@ public:
             }
             this->robotController->endTransaction();
         }
-        logger.info("Exiting consumeSRILFromBuffer");
+        logger.info("Exiting consumeMRILFromBuffer");
     }
 
     void parseCommand(unsigned char buffer[], unsigned int length) {
@@ -248,10 +304,10 @@ public:
         }
 
         switch (buffer[0]) {
-        case SRCP_COMMAND_MOVE_TO:
+        case MRCP_COMMAND_MOVE_TO:
         {
             unsigned int status;                                             // todo put in class
-            status = SRILRingBuffer.putBytesInFront(buffer + 1, length - 1); // queue in SRIL minus SRCP command
+            status = MRILRingBuffer.putBytesInFront(buffer + 1, length - 1); // queue in MRIL minus MRCP command
 
             if (status == RingBuffer::STATUS_FULL) {
                 logger.warning("buffer full");
@@ -262,40 +318,11 @@ public:
             break;
         }
 
-        case SRCP_COMMAND_HALT:
-        case SRCP_COMMAND_GET_ANGLE:
 
-        case SRCP_COMMAND_GET_POSITION:
-        {
-            float currentPose[6];
-            robotController->getCurrentPose(currentPose);
-            Serial.print("x ");
-            Serial.println(currentPose[0]);
-            Serial.print("y ");
-            Serial.println(currentPose[1]);
-            Serial.print("z ");
-            Serial.println(currentPose[2]);
-            Serial.print("a ");
-            Serial.println(currentPose[3]);
-            Serial.print("b ");
-            Serial.println(currentPose[4]);
-            Serial.print("c ");
-            Serial.println(currentPose[5]);
-            break;
-        }
-
-        case SRCP_COMMAND_TEST:
-
-            for (size_t i = 1; i < length; i++) {
-                Serial.print((char)buffer[i]);
-            }
-
-            break;
-
-        case SRCP_COMMAND_QUEUE_IN:
+        case MRCP_COMMAND_QUEUE_IN:
         {
             unsigned int status;                                      // todo put in class
-            status = SRILRingBuffer.putBytes(buffer + 1, length - 1); // queu in SRIL minus SRCP command
+            status = MRILRingBuffer.putBytes(buffer + 1, length - 1); // queu in MRIL minus MRCP command
 
             if (status == RingBuffer::STATUS_FULL) {
                 logger.warning("buffer full");
@@ -313,7 +340,7 @@ public:
                 unsigned int status;
 
                 // logger.time("before ringbuffer");                         // todo put in class
-                status = SRILRingBuffer.putBytes(buffer, length); // queu in SRIL minus SRCP command
+                status = MRILRingBuffer.putBytes(buffer, length); // queu in MRIL minus MRCP command
                 // logger.time("after ringbuffer");                         // todo put in class
 
                 if (status == RingBuffer::STATUS_FULL) {
@@ -341,32 +368,35 @@ public:
         }
     }
 
-    void parseSRCP(byte incomingByte) {
+    void parseMRCP(byte incomingByte) {
         static bool frameStarted = false;
         static unsigned char inputByteBuffer[INPUT_BUFFER_SIZE];
         static unsigned int  inputByteBufferPointer = 0;
+        static bool inputBufferFull                 = false;
 
         // read the incoming byte:
         incomingByte = toUpper(incomingByte);
 
-        if ((AUTO_OPEN_FRAME && !frameStarted) || (incomingByte == SRCP_START)) {
+        if ((AUTO_OPEN_FRAME && !frameStarted) || (incomingByte == MRCP_START)) {
             logger.info("Frame start");
             frameStarted           = true;
             inputByteBufferPointer = 0;
         }
 
         if (frameStarted) {
-            if (incomingByte == SRCP_START) {
+            if (incomingByte == MRCP_START) {
                 // dont save the start byte
-            } else if (incomingByte == SRCP_END) { // message complete. write to messagequeue
+            } else if (incomingByte == MRCP_END) { // message complete. write to messagequeue
                 // logger.time("beforeee parseCommand");
                 logger.info("Frame end");
                 inputByteBuffer[inputByteBufferPointer + 1] = 0;
                 logger.info(inputByteBuffer);
 
                 // logger.time("before parseCommand");
-                parseCommand(inputByteBuffer, inputByteBufferPointer);
-                frameStarted = false;
+                // discard corrupted frame
+                if (!inputBufferFull) parseCommand(inputByteBuffer, inputByteBufferPointer);
+                frameStarted    = false;
+                inputBufferFull = false;
             } else if (((incomingByte >= 48) && (incomingByte <= 57)) || // numbers
                        ((incomingByte >= 65) && (incomingByte <= 90)) || // letters
                        ((incomingByte >= 43) && (incomingByte <= 46)))   // + . , -
@@ -381,6 +411,7 @@ public:
 
                 if (inputByteBufferPointer >= INPUT_BUFFER_SIZE) { // ge because we need a null for last char
                     // frame too long
+                    inputBufferFull = true;
                     logger.warning("input buffer full! pointer: " + String(
                                        inputByteBufferPointer) + " size: " + INPUT_BUFFER_SIZE + " (frame too long)");
                 }
@@ -397,38 +428,54 @@ public:
 
         while (Serial.available() && bytesRead < READ_NUMBER_OF_BYTES_FROM_SERIAL_BEFORE_CONTINUE) {
             // logger.time("before serial read");
-            parseSRCP(Serial.read());
+            parseMRCP(Serial.read());
 
             // logger.time("after serial read");
             bytesRead++;
         }
 
 
-        if (SRCPMODE != HALT) {
-            if (Logic.isDone() && !robotController->isMoving() && (SRILRingBuffer.getSize() > 0)) { // todo add additionalAxis
-                logger.info("Consuming from buffer");
-                consumeSRILFromBuffer();
-                Serial.println(String("$$") + SRILRingBuffer.getSize());
+        if (MRCPMODE != HALT) {
+            if (this->Logic.isDone() && !this->robotController->isMoving() &&  this->WaitCon.isDone()) { // todo add additionalAxis
+                if (this->commandNumber > 0) {                                                           // command number exists
+                    this->sendMessage(String(MRIL_COMMAND_NUMBER) + "1" + String(this->commandNumber));
+                    this->commandNumber = -1; // command was executed
+                }
+
+                if (this->MRILRingBuffer.getSize() > 0) {
+                    logger.info("Consuming from buffer");
+                    consumeMRILFromBuffer();
+                    Serial.println(String("$$") + MRILRingBuffer.getSize());
+                }
             }
         }
     }
 
     int getBufferSize() {
-        return SRIL_BUFFER_SIZE;
+        return MRIL_BUFFER_SIZE;
     }
 
     int getFullBufferSize() {
-        return SRILRingBuffer.getSize();
+        return MRILRingBuffer.getSize();
     }
 
 private:
 
     enum srcpMode { HALT, GO };
-    srcpMode SRCPMODE = GO;
+    srcpMode MRCPMODE = GO;
+
+    long commandNumber = 0;
 
     RobotController *robotController;
     AdditionalAxisController *AxisController;
     IOLogic Logic;
-    RingBuffer SRILRingBuffer; // todo does not report if full
+    WaitController WaitCon;
+    RingBuffer MRILRingBuffer; // todo does not report if full
     // Simple/Sophisticated Robot Instruction Language
+
+    void sendMessage(String message) {
+        Serial.print(MRCP_START);
+        Serial.print(message);
+        Serial.print(MRCP_END);
+    }
 };

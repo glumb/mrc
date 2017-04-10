@@ -14,8 +14,8 @@ void log(String text) {
     logger.info(text);
 }
 
-Kinematic::Kinematic(float geometry[5][3], ROBOT_TYPE robotType) {
-    this->robotType = robotType;
+Kinematic::Kinematic(float geometry[5][3]) {
+    // this->robotType = robotType;
 
     this->V1_length_x_y   =  sqrt(pow(geometry[1][0], 2) +  pow(geometry[1][1], 2));
     this->V4_length_x_y_z =  sqrt(pow(geometry[4][0], 2) +  pow(geometry[4][1], 2) +  pow(geometry[4][2], 2));
@@ -72,17 +72,17 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
         -sb,
     };
 
-    if (this->robotType == ROBOT_TYPE::AXIS4) {
-        if ((abs(targetVectorX[0]) > 0.0001) || (abs(targetVectorX[1] + 1) > 0.0001) ||
-            (abs(targetVectorX[2]) > 0.0001)) {
-            logger.warning("cant reach pose, TCP axis must be vertical");
-
-            // return Kinematic::OUT_OF_RANGE; todo or use this
-        }
-        targetVectorX[0] = 0;
-        targetVectorX[0] = -1;
-        targetVectorX[0] = 0;
-    }
+    // if (this->robotType == ROBOT_TYPE::AXIS4) {
+    //     if ((abs(targetVectorX[0]) > 0.0001) || (abs(targetVectorX[1] + 1) > 0.0001) ||
+    //         (abs(targetVectorX[2]) > 0.0001)) {
+    //         logger.warning("cant reach pose, TCP axis must be vertical");
+    //
+    //         // return Kinematic::OUT_OF_RANGE; todo or use this
+    //     }
+    //     targetVectorX[0] = 0;
+    //     targetVectorX[0] = -1;
+    //     targetVectorX[0] = 0;
+    // }
 
     float R[6] = {
         this->A_corrected[0],
@@ -406,10 +406,10 @@ void Kinematic::forward(float A0, float A1, float A2, float A3, float A4, float 
 }
 
 void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, float R4, float R5, float jointsResult[7][3]) {
-    if (this->robotType == ROBOT_TYPE::AXIS4) {
-        R3 = 0;
-        R4 = -(R1 + R2);
-    }
+    // if (this->robotType == ROBOT_TYPE::AXIS4) {
+    //     R3 = 0;
+    //     R4 = -(R1 + R2);
+    // }
 
     float a = cos(R0);
     float b = sin(R0);

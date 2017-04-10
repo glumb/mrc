@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include "Kinematic.h"
+
 // ---- Servos ---- todo why not pwm pins? 3-6 9-10 20-23
 #define pin_robot_servo_0 3
 #define pin_robot_servo_1 4
@@ -12,20 +13,38 @@
 #define pin_additional_servo_7 -1
 
 // v6
-// const float servoConfig[6][6] = {
-//     { pin_robot_servo_0, 160.00,   700.00, 2380.00,  -90.00,   90.00 },
-//     { pin_robot_servo_1, 160.00,  1880.00,  710.00,  -90.00,   45.00 },
-//     { pin_robot_servo_2, 160.00,   640.00, 2330.00, -135.00,   45.00 },
-//     { pin_robot_servo_3, 160.00,   740.00, 2260.00,  -90.00,   85.00 },
-//     { pin_robot_servo_4, 160.00,  2360.00,  730.00,  -15.00,  140.00 },
-//     { pin_robot_servo_5, 160.00,   740.00, 2200.00,  -90.00,   60.00 }
-// };
+// pinNumber, maxAngularVel degree/sec, calibMin, calibMax, angleDegMin, angleDegMax, home position
+const float servoConfig[6][7] = {
+    { pin_robot_servo_0, 160.00,   700.00, 2380.00,  -90.00,   90.00, 0 },
+    { pin_robot_servo_1, 160.00,  1880.00,  710.00,  -90.00,   45.00, 0 },
+    { pin_robot_servo_2, 160.00,   640.00, 2330.00, -135.00,   45.00, 0 },
+    { pin_robot_servo_3, 160.00,   740.00, 2260.00,  -90.00,   85.00, 0 },
+    { pin_robot_servo_4, 160.00,  2360.00,  730.00,  -15.00,  140.00, 0 },
+    { pin_robot_servo_5, 160.00,   740.00, 2200.00,  -90.00,   60.00, 0 }
+};
+
 // float geometry[5][3] = { { 4.6, 8, 0 }, { 0, 11.6, 0 }, { 1.5, 2, 0 }, { 11, 0, 0 }, { 0, -3, 0 } };
-// #define kinematic_coupling(servos, i) {                                        \
-//         if ((i) == 1) {                                                        \
-//             servos[2]->setOffset(servos[1]->getCurrentAngleExcludingOffset()); \
-//         }                                                                      \
-// }
+float geometry[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
+
+float logicAngleLimits[6][2] = {
+    { servoConfig[0][4],
+      servoConfig[0][5] },
+    { servoConfig[1][4],
+      servoConfig[1][5] },
+    { servoConfig[2][4],
+      servoConfig[2][5] },
+    { servoConfig[3][4],
+      servoConfig[3][5] },
+    { servoConfig[4][4],
+      servoConfig[4][5] },
+    { servoConfig[5][4],
+      servoConfig[5][5] }
+};
+
+
+void logicToPhysicalAngles(float angles[6]) {
+    angles[2] += angles[1];
+}
 
 // v7
 // const float servoConfig[6][6] = {
@@ -38,29 +57,53 @@
 // };
 // #define kinematic_coupling(servos, i) {                                        \
 //         if ((i) == 1) {                                                        \
-//             servos[2]->setOffset(servos[1]->getCurrentAngleExcludingOffset()); \
+//             servos[2]->setOffset(servos[1]->getCurrentAngle()); \
 //         }                                                                      \
 // }
 
 // 4 axis
-const float servoConfig[6][7] = {
-        { pin_robot_servo_0,  250,  570.00, 2400.00,  -77.00,  83.00,   0 },
-        { pin_robot_servo_1,  250, 1190.00, 2400.00,  -90.00,  18.00,   0 },
-        { pin_robot_servo_2,  250, 2175.00,  968.00, -110.00,  -9.00, -30 },
-        { pin_robot_servo_3,  250, 1500.00, 1500.00,  -90.00,  75.00,   0 },
-        { pin_robot_servo_4,  250, 1500.00, 1500.00,  -20.00, 135.00,  30 },
-        { pin_robot_servo_5,  250, 2250.00,  750.00,  -57.00, 90.00, 0 }
-};
+// const float servoConfig[6][7] = {
+//     { pin_robot_servo_0,  250,  570.00, 2400.00,  -77.00,  83.00,   0 },
+//     { pin_robot_servo_1,  250, 1190.00, 2400.00,  -90.00,  18.00,   0 },
+//     { pin_robot_servo_2,  250, 2175.00,  968.00, -110.00,  -9.00, -30 },
+//     { pin_robot_servo_3,  250, 1500.00, 1500.00,  -90.00,  75.00,   0 },
+//     { pin_robot_servo_4,  250, 1500.00, 1500.00,  -20.00, 135.00,  30 },
+//     { pin_robot_servo_5,  250, 2281.00,  712.00,  -75.00,  75.00,   0 }
+// };
 
-float geometry[5][3] = { { 2.5 + 2.3, 7.3, 0 }, { 0, 13.0, 0 }, { 1, 0, 0 }, { 12.6, 0, 0 }, { 0, -3.6, 0 } };
+// float geometry[5][3] = { { 2.5 + 2.3, 7.3, 0 }, { 0, 13.0, 0 }, { 1, 0, 0 }, { 12.6, 0, 0 }, { 0, -3.6, 0 } };
 
-Kinematic::ROBOT_TYPE robotType = Kinematic::ROBOT_TYPE::AXIS4;
+// float logicAngleLimits[6][2] = {
+//     {
+//         servoConfig[0][4],
+//         servoConfig[0][5],
+//     },
+//     {
+//         servoConfig[1][4],
+//         servoConfig[1][5],
+//     },
+//     {
+//         -50,
+//         90,
+//     },
+//     {
+//         servoConfig[3][4],
+//         servoConfig[3][5],
+//     },
+//     {
+//         servoConfig[4][4],
+//         servoConfig[4][5],
+//     },
+//     {
+//         servoConfig[5][4],
+//         servoConfig[5][5],
+//     }
+// };
 
-#define kinematic_coupling(servos, i) {                                        \
-        if ((i) == 1) {                                                        \
-            servos[2]->setOffset(servos[1]->getCurrentAngleExcludingOffset()); \
-        }                                                                      \
-}
+
+// void logicToPhysicalAngles(float angles[6]) {
+//     angles[2] += angles[1];
+// }
 
 const float additionalAxisServoConfig[2][6] = {
     { pin_additional_servo_6, 160.00, 1888.00,    1222,    0.00,  1.00 },

@@ -8,7 +8,7 @@ public:
 
     enum ROBOT_TYPE { AXIS6, AXIS4 };
 
-    Kinematic(float geometry[5][3], ROBOT_TYPE robotType = ROBOT_TYPE::AXIS6);
+    Kinematic(float geometry[5][3]);
 
     static const unsigned int OK;
     static const unsigned int OUT_OF_RANGE;
@@ -59,6 +59,5 @@ private:
     float J_initial_absolute[5][3];
     double A_corrected[6];
 
-    ROBOT_TYPE robotType;
 };
 #endif

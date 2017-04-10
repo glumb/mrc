@@ -9,7 +9,7 @@
  *
  * Kinematic must implement forward() and inverse()
  * Servos must implement atTargetAngle(), getTargetRadAngle(), setTargetRadAngle(), setCurrentAngleVelocity(), getMaxAngleVelocity(),
- * getCurrentAngleExcludingOffset()
+ * getCurrentLogicAngle()
  * todo use interface
  */
 
@@ -23,11 +23,14 @@ class RobotController {
 public:
 
     RobotController(MyServo   *servos[],
-                    Kinematic *Kin);
+                    Kinematic *Kin,
+                    void(*logicToPhysicalAngles)(float[6]));
 
     enum MOVEMENT_METHODS { LINEAR, P2P, CIRCULAR };
     enum STATES { IDLE, MOVING, START_MOVE, PREPARE_MOVE };
     enum POSITION { X = 0, Y = 1, Z = 2, A = 3, B = 4, C = 5 };
+
+    void             setLogicAngleLimits(float angleLimitsRad[6][2]);
 
     void             setMaxVelocity(float velocity);
     float            getMaxVelocity();
@@ -52,8 +55,10 @@ public:
     void  setTargetPose(POSITION position,
                         float    value);
 
-    void  getCurrentAngles(float currentAngles[6]);
-    void  getCurrentAngle(unsigned int index);
+    void  getCurrentLogicAngles(float currentAngles[6]);
+    void  getCurrentLogicAngle(unsigned int index);
+
+    void  getCurrentPhysicalAngles(float angles[6]);
 
     void  setTargetAngles(float targetAngles[6]);
     void  setTargetAngle(unsigned int index,
@@ -93,6 +98,9 @@ private:
     float interpolationOrientationAngleIncrement;
     float maxVelocity;
 
+    float logicAngleLimits[6][2];
+
+    void (*logicToPhysicalAngles )(float[6]);
 
     Kinematic *IK;
 

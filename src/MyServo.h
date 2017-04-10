@@ -27,14 +27,9 @@ public:
                                     unsigned int maxFreq);
 
     float        getCurrentAngle();
-    float        getCurrentAngleExcludingOffset();
 
     void         setTargetRadAngle(float angleRad);
     float        getTargetRadAngle();
-    float        getTargetRadAngleExcludingOffset();
-
-    void         setOffset(float angleRad);
-    float        getOffset();
 
     void         setCurrentAngleVelocity(float angleRadVelocity);
     float        getCurrentAngleVelocity();
@@ -65,7 +60,9 @@ private:
     unsigned int minFreq;
     unsigned int maxFreq;
 
-    float offsetAngle = 0;
+    unsigned long elapsedTime = 0;
+
+    float startAngle = 0;
     volatile float currentAngle;
     float targetAngle = 0;
 

@@ -66,17 +66,16 @@ public:
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
-    void displayRobot(Kinematic *kin, MyServo *servos[6], unsigned int x, unsigned int y, float scale, unsigned int position = 0) {
+    void displayRobot(Kinematic *kin, RobotController *RoboCon, unsigned int x, unsigned int y, float scale, unsigned int position = 0) {
         float jointPositions[7][3] = {0}; // 7 elements - Euler angles ar the last
-
-        kin->calculateCoordinates(servos[0]->getCurrentAngle(),
-                                  servos[1]->getCurrentAngle(),
-                                  servos[2]->getCurrentAngleExcludingOffset(), // todo get all excluding offset to be flexible with
-                                                                               // kinematci
-                                                                               // coupling?
-                                  servos[3]->getCurrentAngle(),
-                                  servos[4]->getCurrentAngle(),
-                                  servos[5]->getCurrentAngle(), jointPositions);
+        float angles[6];
+        RoboCon->getCurrentLogicAngles(angles);
+        kin->calculateCoordinates(angles[0],
+                                  angles[1],
+                                  angles[2],
+                                  angles[3],
+                                  angles[4],
+                                  angles[5], jointPositions);
 
         switch (position) {
         case 0:                                                        // Front
@@ -174,11 +173,11 @@ public:
     void displayBars(unsigned int x, unsigned int y, unsigned int width, unsigned int height, MyServo *servos[]) {
         for (size_t i = 0; i < 6; i++) {
             // float range        = servos[i]->getCurrentAngle() - servos[i]->getMinRadAngle();
-            int neutral = (int)map_float2(0, servos[i]->getMinRadAngle(), servos[i]->getMaxRadAngle(), 0, width);
+            int neutral = (int)map_float2(servos[i]->getHomeRadAngle(), servos[i]->getMinRadAngle(), servos[i]->getMaxRadAngle(), 0, width);
 
-            int mappedValueTarget = (int)map_float2(servos[i]->getTargetRadAngleExcludingOffset(), servos[i]->getMinRadAngle(),
+            int mappedValueTarget = (int)map_float2(servos[i]->getTargetRadAngle(), servos[i]->getMinRadAngle(),
                                                     servos[i]->getMaxRadAngle(), 0, width);
-            int mappedValueCurrent = (int)map_float2(servos[i]->getCurrentAngleExcludingOffset(), servos[i]->getMinRadAngle(),
+            int mappedValueCurrent = (int)map_float2(servos[i]->getCurrentAngle(), servos[i]->getMinRadAngle(),
                                                      servos[i]->getMaxRadAngle(), 0, width);
 
             unsigned int heightPerBar = height / 6;
