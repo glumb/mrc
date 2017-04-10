@@ -22,38 +22,45 @@ Logger logger("handleSerialCommand");
 #define DEG_2_RAD ((1f / 180f) * PI)
 #define RAD_2_DEG ((1f / PI) * 180)
 
-const  char MRCP_START = 'S';
 
-// const  char MRCP_END   = '\r';
-const  char MRCP_END = 'E';
+// const  char MRCP_END_FRAME   = '\r';
+const  char MRCP_START_FRAME = 'S';
+const  char MRCP_END_FRAME   = 'E';
 
 const  char MRCP_COMMAND_QUEUE_IN = 'Q';
-const  char MRCP_COMMAND_MOVE_TO  = 'G';
+const  char MRCP_COMMAND_EXECUTE  = 'E';
+const  char MRCP_COMMAND_WRITE    = 'W';
 
 
-const  char MRIL_COMMAND_MOVE         = 'M';
-const  char MRIL_COMMAND_LOGIC_INPUT  = 'I';
-const  char MRIL_COMMAND_LOGIC_OUTPUT = 'O';
-const  char MRIL_COMMAND_SET_X        = 'X';
-const  char MRIL_COMMAND_SET_Y        = 'Y';
-const  char MRIL_COMMAND_SET_Z        = 'Z';
-const  char MRIL_COMMAND_SET_A        = 'A';
-const  char MRIL_COMMAND_SET_B        = 'B';
-const  char MRIL_COMMAND_SET_C        = 'C';
-const  char MRIL_COMMAND_ROTATE       = 'R';
-const  char MRIL_COMMAND_VELOCITY     = 'V';
-const  char MRIL_COMMAND_WAIT         = 'W';
+const  char MRIL_COMMAND_SET_X           = 'X';
+const  char MRIL_COMMAND_SET_Y           = 'Y';
+const  char MRIL_COMMAND_SET_Z           = 'Z';
+const  char MRIL_COMMAND_SET_A           = 'A';
+const  char MRIL_COMMAND_SET_B           = 'B';
+const  char MRIL_COMMAND_SET_C           = 'C';
+const  char MRIL_COMMAND_ROTATE          = 'R';
+const  char MRIL_COMMAND_VELOCITY        = 'V';
+const  char MRIL_COMMAND_ANCHOR          = 'T';
+const  char MRIL_COMMAND_MOVEMENT_METHOD = 'M';
+const  char MRIL_COMMAND_LOGIC_INPUT     = 'I';
+const  char MRIL_COMMAND_LOGIC_OUTPUT    = 'O';
+const  char MRIL_COMMAND_SERIAL_IO       = 'U';
 
-const  char MRIL_COMMAND_HALT         = 'H';
-const  char MRIL_COMMAND_GET_ANGLE    = 'L';
-const  char MRIL_COMMAND_GET_POSITION = 'P';
-const  char MRIL_COMMAND_TEST         = 'T';
-const  char MRIL_COMMAND_NUMBER       = 'N';
+const  char MRIL_COMMAND_WAIT = 'W';
+
+const  char MRIL_COMMAND_TEST = 'F';
+
+const  char MRIL_COMMAND_NUMBER = 'N';
+
+const  char MRIL_COMMAND_HALT = 'H';
+const  char MRIL_IS_MOVING    = 'K';
 
 const unsigned int MRIL_MOVEMENT_METHOD_P2P      = 0;
 const unsigned int MRIL_MOVEMENT_METHOD_LINEAR   = 1;
 const unsigned int MRIL_MOVEMENT_METHOD_CIRCULAR = 2;
 
+const String E_RECEIVEBUFFER_FULL = "E01";
+const String E_MRILBUFFER_FULL = "E02";
 // todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
 
 class handleSerialCommand {
@@ -89,7 +96,7 @@ public:
                         optionsAndValue[optionsAndValuePointer] = '\0';   // NULL terminate to form a string
 
                         switch (symbol) {
-                        case MRIL_COMMAND_MOVE: {
+                        case MRIL_COMMAND_MOVEMENT_METHOD: {
                             unsigned int movementMethodCode = atoi(optionsAndValue);
                             logger.info("MRIL_COMMAND_MOVE " + String(movementMethodCode));
 
@@ -250,27 +257,7 @@ public:
                             break;
 
                         case MRIL_COMMAND_HALT:
-                        case MRIL_COMMAND_GET_ANGLE:
                             break;
-
-                        case MRIL_COMMAND_GET_POSITION:
-                        {
-                            float currentPose[6];
-                            robotController->getCurrentPose(currentPose);
-                            Serial.print("X ");
-                            Serial.print(currentPose[0]);
-                            Serial.print(" Y ");
-                            Serial.print(currentPose[1]);
-                            Serial.print(" Z ");
-                            Serial.print(currentPose[2]);
-                            Serial.print(" A ");
-                            Serial.print(currentPose[3]);
-                            Serial.print(" B ");
-                            Serial.print(currentPose[4]);
-                            Serial.print(" C ");
-                            Serial.println(currentPose[5]);
-                            break;
-                        }
 
                         default:
                             Serial.println("unknown Symbol ");
@@ -304,7 +291,7 @@ public:
         }
 
         switch (buffer[0]) {
-        case MRCP_COMMAND_MOVE_TO:
+        case MRCP_COMMAND_EXECUTE:
         {
             unsigned int status;                                             // todo put in class
             status = MRILRingBuffer.putBytesInFront(buffer + 1, length - 1); // queue in MRIL minus MRCP command
@@ -377,16 +364,16 @@ public:
         // read the incoming byte:
         incomingByte = toUpper(incomingByte);
 
-        if ((AUTO_OPEN_FRAME && !frameStarted) || (incomingByte == MRCP_START)) {
+        if ((AUTO_OPEN_FRAME && !frameStarted) || (incomingByte == MRCP_START_FRAME)) {
             logger.info("Frame start");
             frameStarted           = true;
             inputByteBufferPointer = 0;
         }
 
         if (frameStarted) {
-            if (incomingByte == MRCP_START) {
+            if (incomingByte == MRCP_START_FRAME) {
                 // dont save the start byte
-            } else if (incomingByte == MRCP_END) { // message complete. write to messagequeue
+            } else if (incomingByte == MRCP_END_FRAME) { // message complete. write to messagequeue
                 // logger.time("beforeee parseCommand");
                 logger.info("Frame end");
                 inputByteBuffer[inputByteBufferPointer + 1] = 0;
@@ -439,7 +426,7 @@ public:
             if (this->Logic.isDone() && !this->robotController->isMoving() &&  this->WaitCon.isDone()) { // todo add additionalAxis
                 if (this->commandNumber > 0) {                                                           // command number exists
                     this->sendMessage(String(MRIL_COMMAND_NUMBER) + "1" + String(this->commandNumber));
-                    this->commandNumber = -1; // command was executed
+                    this->commandNumber = -1;                                                            // command was executed
                 }
 
                 if (this->MRILRingBuffer.getSize() > 0) {
@@ -474,8 +461,8 @@ private:
     // Simple/Sophisticated Robot Instruction Language
 
     void sendMessage(String message) {
-        Serial.print(MRCP_START);
+        Serial.print(MRCP_START_FRAME);
         Serial.print(message);
-        Serial.print(MRCP_END);
+        Serial.print(MRCP_END_FRAME);
     }
 };
