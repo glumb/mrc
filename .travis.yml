@@ -25,7 +25,15 @@
 #
 
 language: python
-compiler: clang
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - gcc
+  - clang
+
 python:
     - "2.7"
 
