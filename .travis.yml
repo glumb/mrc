@@ -28,10 +28,18 @@ language: python
 python:
     - "2.7"
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+
 sudo: false
 cache:
     directories:
         - "~/.platformio"
+
+before_install:
+  - pip install --user cpp-coveralls
 
 install:
     - pip install -U platformio
@@ -39,27 +47,16 @@ install:
 script:
     - platformio run
 
+script:
+  - cd test #test start
+  - cmake .
+  - make
+  - cd bin
+  - ./tests # tests end
+  - platformio run #pio start
 
-#
-# Template #2: The project is intended to by used as a library with examples
-#
+after_success:
+  - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
 
-# language: python
-# python:
-#     - "2.7"
-#
-# sudo: false
-# cache:
-#     directories:
-#         - "~/.platformio"
-#
-# env:
-#     - PLATFORMIO_CI_SRC=path/to/test/file.c
-#     - PLATFORMIO_CI_SRC=examples/file.ino
-#     - PLATFORMIO_CI_SRC=path/to/test/directory
-#
-# install:
-#     - pip install -U platformio
-#
-# script:
-#     - platformio ci --lib="." --board=ID_1 --board=ID_2 --board=ID_N
+notifications:
+  email: false
