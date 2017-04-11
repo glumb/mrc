@@ -249,9 +249,9 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     this->cross(J4J5_vector, J4J3_vector, J4J5_J4J3_normal_vector);
 
 
-    float XZ_parallel_aligned_vector[3] = { 10 *  cos(R[0] +  PI / 2),
-                                            0,
-                                            -10 *  sin(R[0] +  PI / 2) };
+    float XZ_parallel_aligned_vector[3] = { float(10.0 *  cos(R[0] +  PI / 2)),
+                                            0.0,
+                                            float(-10.0 *  sin(R[0] +  PI / 2)) };
 
     float reference[3];
     this->cross(XZ_parallel_aligned_vector, J4J3_vector, reference);

@@ -57,7 +57,7 @@ private:
     float V4_length_x_y_z;
     float geometry[5][3];
     float J_initial_absolute[5][3];
-    double A_corrected[6];
+    float A_corrected[6];
 
 };
 #endif

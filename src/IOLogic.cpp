@@ -1,6 +1,7 @@
 #include "IOLogic.h"
 #include "fastRW.h"
 #include "Logger.h"
+#include "Arduino.h"
 
 namespace {
 Logger logger("IOLogic");
