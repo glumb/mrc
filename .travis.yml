@@ -39,7 +39,7 @@ cache:
         - "~/.platformio"
 
 before_install:
-  - pip install --user cpp-coveralls
+    - pip install cpp-coveralls
 
 install:
     - pip install -U platformio
