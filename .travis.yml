@@ -46,17 +46,14 @@ install:
     - pip install -U platformio
 
 before_script:
+    - cd test
+    - cmake .
+    - make
+    - ls -R
 
 script:
-    - platformio run
-
-script:
-  - platformio run #pio start end
-  - cd test #test start
-  - cmake .
-  - make
-  - cd bin
-  - ./tests # tests end
+    - ./tests/bin/tests
+    - platformio run #pio start end
 
 after_success:
   - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
