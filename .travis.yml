@@ -25,6 +25,7 @@
 #
 
 language: python
+compiler: clang
 python:
     - "2.7"
 
@@ -48,12 +49,12 @@ script:
     - platformio run
 
 script:
+  - platformio run #pio start end
   - cd test #test start
   - cmake .
   - make
   - cd bin
   - ./tests # tests end
-  - platformio run #pio start
 
 after_success:
   - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
