@@ -39,8 +39,8 @@ dist: trusty
 #   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
 
 before_script:
-    # - export CC=cpp
-    # - export CXX=c++
+    - export CC=cpp
+    - export CXX=c++
     - cd test
     - cmake .
     - make
