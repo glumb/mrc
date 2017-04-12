@@ -33,12 +33,22 @@ compiler:
 # python:
 #     - "2.7"
 
+sudo: false
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - george-edison55-precise-backports
+    packages:
+      - cmake
+      - cmake-data
 
-sudo: false
+
+matrix:
+ include:
+  - env: CXX=g++ CC=gcc
+  - env: CXX=clang++ CC=clang
+
 cache:
     directories:
         - "~/.platformio"
