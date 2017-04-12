@@ -52,7 +52,7 @@ private:
                  float result[3]);
 
 
-     bool debug = false;
+     bool debug;
     float V1_length_x_y;
     float V4_length_x_y_z;
     float geometry[5][3];

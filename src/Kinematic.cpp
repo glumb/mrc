@@ -16,6 +16,7 @@ void log(String text) {
 
 Kinematic::Kinematic(float geometry[5][3]) {
     // this->robotType = robotType;
+    this->debug = false;
 
     this->V1_length_x_y   =  sqrt(pow(geometry[1][0], 2) +  pow(geometry[1][1], 2));
     this->V4_length_x_y_z =  sqrt(pow(geometry[4][0], 2) +  pow(geometry[4][1], 2) +  pow(geometry[4][2], 2));

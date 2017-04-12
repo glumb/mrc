@@ -8,13 +8,13 @@ enable_language(C)
 enable_language(CXX)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
-
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
-    set(CMAKE_CXX_FLAGS         ${CMAKE_CXX_FLAGS} "-Wall -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
-    set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g3")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
-endif()
+#
+# if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
+#     set(CMAKE_CXX_FLAGS         ${CMAKE_CXX_FLAGS} "-Wall -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
+#     set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g3")
+#     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+# endif()
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
