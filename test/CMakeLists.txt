@@ -47,8 +47,8 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 
 set(SOURCES
-../src/Kinematic.cpp
-# ../src/Logger.cpp
+  ../src/Kinematic.cpp
+  # ../src/IOLogic.cpp
 )
 
 file(GLOB TEST_FILES tests/*.cpp)
