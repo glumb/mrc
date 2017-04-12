@@ -24,24 +24,23 @@
 # Template #1: General project. Test it using existing `platformio.ini`.
 #
 
+langauge: cpp
 sudo: required
 dist: trusty
-language: cpp
-comipler: gcc
 
-before_install:
-  # C++11
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
-
-install:
-  # C++11
-  - sudo apt-get install -qq g++-5
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
+# before_install:
+#   # C++11
+#   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+#   - sudo apt-get update -qq
+#
+# install:
+#   # C++11
+#   - sudo apt-get install -qq g++-5
+#   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
 
 before_script:
-    - export CC=gcc
-    - export CXX=gcc
+    - export CC=ccc
+    - export CXX=c++
     - cd test
     - cmake .
     - make
