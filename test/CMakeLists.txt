@@ -7,7 +7,6 @@ enable_language(CXX)
 
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
-
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
@@ -47,16 +46,12 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
                         "${gmock_SOURCE_DIR}/include")
 endif()
 
-
-
-# file(GLOB SOURCES ../src/*.cpp)
-
 set(SOURCES
 ../src/Kinematic.cpp
 # ../src/Logger.cpp
 )
 
-file(GLOB TEST_FILES *.cpp)
+file(GLOB TEST_FILES tests/*.cpp)
 file(GLOB FAKE_FILES fake/*.cpp)
 file(GLOB MOCKS mock/src/*.cpp)
 

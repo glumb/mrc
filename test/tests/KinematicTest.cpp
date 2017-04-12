@@ -1,13 +1,6 @@
 #include "gtest/gtest.h"
 #include "Kinematic.h"
 
-#ifndef KINEMATIC_TEST_H
-# define KINEMATIC_TEST_H
-
-// #include "Kinematic.h" uncomment include_dir
-// #include "../src/Kinematic.h"
-// #include "gtest/gtest.h"
-// #include "gmock/gmock.h"
 
 namespace {
 float geo[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
@@ -29,5 +22,3 @@ TEST(KinematicTest, forwardEqualsRevers) {
     }
 }
 }
-
-#endif // ifndef KINEMATIC_TEST_H
