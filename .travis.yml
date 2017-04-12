@@ -53,12 +53,10 @@ before_script:
     - make
 
 script:
-    - ./tests/bin/tests
-    - platformio run #pio start end
+    - ./bin/tests #run google tests
+    - cd ..
+    - platformio run
 
-
-after_success:
-  - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
 
 notifications:
   email: false
