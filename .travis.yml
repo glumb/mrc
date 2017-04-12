@@ -30,8 +30,8 @@ compiler:
     - gcc
     - clang
 
-python:
-    - "2.7"
+# python:
+#     - "2.7"
 
 addons:
   apt:
@@ -43,11 +43,11 @@ cache:
     directories:
         - "~/.platformio"
 
-before_install:
-    - pip install cpp-coveralls
-
-install:
-    - pip install -U platformio
+# before_install:
+#     - pip install cpp-coveralls
+#
+# install:
+#     - pip install -U platformio
 
 before_script:
     - cd test
