@@ -24,8 +24,8 @@
 # Template #1: General project. Test it using existing `platformio.ini`.
 #
 
-langauge: cpp
-sudo: required
+language: cpp
+compiler: gcc
 dist: trusty
 
 # before_install:
@@ -39,8 +39,8 @@ dist: trusty
 #   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
 
 before_script:
-    - export CC=cpp
-    - export CXX=c++
+    # - export CC=cpp
+    # - export CXX=c++
     - cd test
     - cmake .
     - make
