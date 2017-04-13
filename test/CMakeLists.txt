@@ -48,7 +48,7 @@ endif()
 
 set(SOURCES
   ../src/Kinematic.cpp
-  # ../src/IOLogic.cpp
+  ../src/RingBuffer.cpp
 )
 
 file(GLOB TEST_FILES tests/*.cpp)

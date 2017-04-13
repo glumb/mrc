@@ -60,6 +60,7 @@ public:
   //
   byte get();
   byte getByte();
+  unsigned int getMessage(byte message[]);
   byte getFromBack();
 
   // static const unsigned char START;
