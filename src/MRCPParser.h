@@ -19,7 +19,7 @@
 class MRCPParser {
 public:
 
-    MRCPParser(EEPromStorage _EEPromStorage, RingBuffer _RingBuffer, MRILParser _MRILParser,CommunicationInterface _CommunicationInterface) {}
+    MRCPParser(EEPromStorage _EEPromStorage, RingBuffer _RingBuffer, MRILParser _MRILParser,CommunicationInterface _CommunicationInterface);
 
     void parseCommand(char         buffer[],
                       unsigned int length);

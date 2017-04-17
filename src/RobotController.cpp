@@ -182,7 +182,6 @@ void RobotController::setTargetPose(float x,
 }
 
 void RobotController::setTargetPose(POSITION position, float value) {
-  std::cout << "VLAUEUEUEUEUEUU"<<value << '\n';
     switch (position) {
     case X:
         this->targetPoseBuffer[0] = value;

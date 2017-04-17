@@ -126,7 +126,7 @@ void TEST_MRILPARSER() {
     WaitController  W;
     MRCPR Mrcpr;
 
-    MRILParser MRIL(&R,IO,&A,W,Mrcpr);
+    MRILParser MRIL(R,IO,&A,W,Mrcpr);
 
     char mri[] = {'W','3','0'};
     MRIL.parse(mri,3);

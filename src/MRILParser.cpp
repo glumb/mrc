@@ -129,7 +129,6 @@ void MRILParser::parse(char mrilInstruction[], int length) {
                     float value = atof(command + 1); // shift one because option V<opt><val>
                     _logger.info("setting x to: " + String(value));
                     this->_RobotController.setTargetPose(RobotController::POSITION::X, value);
-                    std::cout << "set to x" << '\n';
                 }
                 break;
             }
