@@ -18,6 +18,8 @@ public:
             float        maxRadAngle,
             float        homeRadAngle = 0);
 
+    int          getPinNumber();
+
     void         setAngleLimits(float minRadAngle,
                                 float maxRadAngle);
     float        getMinRadAngle();
@@ -53,7 +55,7 @@ private:
 
     bool virtualServo = false;
 
-    unsigned int pinNumber;
+    int pinNumber;
 
     float homeAngle;
 

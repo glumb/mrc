@@ -138,6 +138,40 @@ void RobotController::getTargetPose(float targetPose[6]) {
     targetPose = this->targetPose; // todo
 }
 
+float RobotController::getTargetPose(POSITION position) {
+    switch (position) {
+    case X:
+        return this->targetPose[0];
+
+        break;
+
+    case Y:
+        return this->targetPose[1];
+
+        break;
+
+    case Z:
+        return this->targetPose[2];
+
+        break;
+
+    case A:
+        return this->targetPose[3];
+
+        break;
+
+    case B:
+        return this->targetPose[4];
+
+        break;
+
+    case C:
+        return this->targetPose[5];
+
+        break;
+    }
+}
+
 void RobotController::setTargetPose(float x,
                                     float y,
                                     float z,
@@ -148,6 +182,7 @@ void RobotController::setTargetPose(float x,
 }
 
 void RobotController::setTargetPose(POSITION position, float value) {
+  std::cout << "VLAUEUEUEUEUEUU"<<value << '\n';
     switch (position) {
     case X:
         this->targetPoseBuffer[0] = value;
@@ -255,7 +290,7 @@ void RobotController::_applyTimedTargetAngles(float targetAngles[6], float targe
 
     // todo take into account that the target angle may be out of angle and thus be far away
     for (unsigned int i = 0; i < NUMBER_OF_AXIS; i++) {
-        float dAngle = abs(targetAngles[i] - this->Servos[i]->getCurrentAngle());
+        float dAngle = fabs(targetAngles[i] - this->Servos[i]->getCurrentAngle());
         float dTime  = dAngle / this->Servos[i]->getMaxAngleVelocity();
 
         if (dTime > maxTime) maxTime = dTime;
@@ -269,7 +304,7 @@ void RobotController::_applyTimedTargetAngles(float targetAngles[6], float targe
     // Serial.println(targetAngles[5]);
     if (maxTime != 0) {
         for (unsigned int j = 0; j < NUMBER_OF_AXIS; j++) {
-            float dAngle = abs(targetAngles[j] - this->Servos[j]->getCurrentAngle());
+            float dAngle = fabs(targetAngles[j] - this->Servos[j]->getCurrentAngle());
             this->Servos[j]->setCurrentAngleVelocity(dAngle / maxTime);
             this->Servos[j]->setTargetRadAngle(targetAngles[j]);
         }
@@ -308,6 +343,57 @@ void RobotController::getCurrentPose(float Pose[6]) {
         );
 }
 
+float RobotController::getCurrentPose(POSITION position) {
+    float angles[6];
+    float pose[6];
+
+    for (size_t i = 0; i < 6; i++) {
+        angles[i] = this->Servos[i]->getCurrentAngle();
+    }
+    physicaltoLogicAngles(angles);
+    this->IK->forward(
+        angles[0],
+        angles[1],
+        angles[2],
+        angles[3],
+        angles[4],
+        angles[5],
+        pose
+        );
+
+    switch (position) {
+    case X:
+        return pose[0];
+
+        break;
+
+    case Y:
+        return pose[1];
+
+        break;
+
+    case Z:
+        return pose[2];
+
+        break;
+
+    case A:
+        return pose[3];
+
+        break;
+
+    case B:
+        return pose[4];
+
+        break;
+
+    case C:
+        return pose[5];
+
+        break;
+    }
+}
+
 bool RobotController::isMoving() {
     return this->state != IDLE;
 }
@@ -333,7 +419,6 @@ void RobotController::setLogicAngleLimits(float angleLimitsRad[6][2]) {
 }
 
 void RobotController::getCurrentPhysicalAngles(float angles[6]) {
-
     getCurrentLogicAngles(angles);
     this->logicToPhysicalAngles(angles);
 }
@@ -549,7 +634,7 @@ void RobotController::process() {
             float b = 0;
             float c = 0;
 
-            if ((abs(db) > 0.0001) || (abs(dc) > 0.0001)) {
+            if ((fabs(db) > 0.0001) || (fabs(dc) > 0.0001)) {
                 float targetVector[3];
 
                 this->rodrigues(targetVector, this->rotationAxisVectorNorm, this->startOrientationVector,
@@ -685,7 +770,7 @@ void RobotController::process() {
             }
 
             // todo handle singularity
-            if (abs(targetAngles[4] - (PI / 2.0)) < 0.05) { // axis 5 and 3 in line
+            if (fabs(targetAngles[4] - (PI / 2.0)) < 0.05) { // axis 5 and 3 in line
                 Serial.println("singularity axis 5,3");
 
                 targetAngles[3] = this->Servos[3]->getCurrentAngle();

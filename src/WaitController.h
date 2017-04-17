@@ -1,7 +1,7 @@
-#include "Arduino.h"
 #ifndef WAIT_CONTROLLER_H
 #define WAIT_CONTROLLER_H 1
 
+#include "Arduino.h"
 
 class WaitController {
 public:

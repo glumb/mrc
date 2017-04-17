@@ -1,6 +1,4 @@
-#include "MyServo.h"
 
-#include "Kinematic.h"
 
 /**
  * Robot: geometry, servos, angleLimits, kinematic
@@ -14,8 +12,10 @@
  */
 
 #ifndef ROBOT_CONTROLLER_H
-# define ROBOT_CONTROLLER_H value
+# define ROBOT_CONTROLLER_H 1
 
+#include "MyServo.h"
+#include "Kinematic.h"
 
 # define NUMBER_OF_AXIS 6
 
@@ -46,6 +46,7 @@ public:
     MOVEMENT_METHODS getMovementMethod();
 
     void             getTargetPose(float targetPose[6]);
+    float             getTargetPose(POSITION position);
     void             setTargetPose(float x,
                                    float y,
                                    float z,
@@ -67,6 +68,7 @@ public:
     float getTargetAngle(unsigned int index);
 
     void  getCurrentPose(float currentPose[6]);
+    float getCurrentPose(POSITION position);
 
     bool  isMoving();
     bool  atTargetPose();

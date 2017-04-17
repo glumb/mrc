@@ -19,6 +19,10 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef RINGBUFFER_H
+#define RINGBUFFER_H 1
+
+
 #include <Arduino.h>
 
 class RingBuffer
@@ -39,29 +43,29 @@ public:
   // Returns the maximum capacity of the buffer
   int  getCapacity();
 
-  // This method returns the byte that is located at index in the buffer but doesn't modify the buffer like the get methods (doesn't remove
-  // the retured byte from the buffer)
-  byte peek(unsigned int index);
+  // This method returns the char that is located at index in the buffer but doesn't modify the buffer like the get methods (doesn't remove
+  // the retured char from the buffer)
+  char peek(unsigned int index);
 
   //
   // Put methods, either a regular put in back or put in front
   //
 
 
-  int putBytes(byte        *message,
+  int putBytes(char        *message,
                  unsigned int messageLength);
 
-  int putBytesInFront(byte        *message,
+  int putBytesInFront(char        *message,
                         unsigned int messageLength);
 
 
   //
   // Get methods, either a regular get from front or from back
   //
-  byte get();
-  byte getByte();
-  unsigned int getMessage(byte message[]);
-  byte getFromBack();
+  char get();
+  char getByte();
+  unsigned int getMessage(char message[]);
+  char getFromBack();
 
   // static const unsigned char START;
   static const unsigned char END;
@@ -71,12 +75,13 @@ public:
 
 private:
 
-  byte *data;
+  char *data;
 
   unsigned int capacity;
   unsigned int position;
   unsigned int length;
 
-  void put(byte in);
-  void putInFront(byte in);
+  void put(char in);
+  void putInFront(char in);
 };
+#endif

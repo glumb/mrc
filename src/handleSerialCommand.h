@@ -59,8 +59,7 @@ const unsigned int MRIL_MOVEMENT_METHOD_P2P      = 0;
 const unsigned int MRIL_MOVEMENT_METHOD_LINEAR   = 1;
 const unsigned int MRIL_MOVEMENT_METHOD_CIRCULAR = 2;
 
-const String E_RECEIVEBUFFER_FULL = "E01";
-const String E_MRILBUFFER_FULL    = "E02";
+
 
 // todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
 

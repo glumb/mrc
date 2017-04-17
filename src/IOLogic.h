@@ -1,5 +1,5 @@
 #ifndef IOLOGIC_H
-#define IOLOGIC_H value
+#define IOLOGIC_H 1
 
 #define MAX_NUMBER_OF_PINS 10
 

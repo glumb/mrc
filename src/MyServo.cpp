@@ -1,6 +1,9 @@
 #include "MyServo.h"
+
 #include <util/atomic.h>
 #include "Logger.h"
+#include "Logger.h"
+#include "Arduino.h"
 
 namespace {
 Logger logger("MyServo");
@@ -56,6 +59,10 @@ MyServo::MyServo(int          pinNumber,
 
 float MyServo::getHomeRadAngle() {
     return this->homeAngle;
+}
+
+int MyServo::getPinNumber() {
+    return this->pinNumber;
 }
 
 void MyServo::setAngleLimits(float minRadAngle, float maxRadAngle) {
@@ -139,7 +146,7 @@ void MyServo::process(unsigned int deltaT) {
 
     // Serial.println(deltaAngle);
 
-    if (abs(deltaAngle) > abs(this->targetAngle - this->startAngle)) {
+    if (fabs(deltaAngle) > fabs(this->targetAngle - this->startAngle)) {
         this->currentAngle = this->targetAngle;
 
         // set start to target to not move again on elapsed time overflow ~50 days?
@@ -168,7 +175,7 @@ void MyServo::process(unsigned int deltaT) {
 }
 
 bool MyServo::atTargetAngle() {
-    return abs(this->currentAngle - this->targetAngle) < 0.000001;
+    return fabs(this->currentAngle - this->targetAngle) < 0.000001;
 }
 
 void MyServo::move() {

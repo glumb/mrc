@@ -1,7 +1,8 @@
 #include "IOLogic.h"
+
 #include "fastRW.h"
 #include "Logger.h"
-#include "Arduino.h"
+
 
 namespace {
 Logger logger("IOLogic");
@@ -22,9 +23,9 @@ void IOLogic::addCondition(unsigned int pin, unsigned int state) {
 void IOLogic::setOutput(unsigned int pin, unsigned int state) {
     pinAsOutput(pin);
 
-    Serial.print("setting pin ");
-    Serial.print(pin);
-    Serial.print("State");
+    logger.info("setting pin ");
+    logger.info(pin);
+    logger.info("State");
     logger.info(state);
 
     switch (state) {
@@ -38,8 +39,7 @@ void IOLogic::setOutput(unsigned int pin, unsigned int state) {
         break;
 
     default:
-        Serial.print("expected state [0,1], given: ");
-        logger.info(state);
+        logger.warning("expected state [0,1], given: "+String(state));
     }
 }
 
@@ -52,9 +52,9 @@ bool IOLogic::isDone()                                           {
             unsigned int state = this->conditionBuffer[i][1];
 
             /*
-                  Serial.print("waitung for pin - state ");
-                  Serial.print(pin);
-                  Serial.print(" - ");
+                  IO.transmit("waitung for pin - state ");
+                  IO.transmit(pin);
+                  IO.transmit(" - ");
                   logger.info(state);
                   delay(2000);
              */
@@ -74,8 +74,7 @@ bool IOLogic::isDone()                                           {
                 break;
 
             default:
-                Serial.print("expected state [0,1], given: ");
-                logger.info(state);
+                logger.warning("expected state [0,1], given: "+String(state));
             }
         }
 

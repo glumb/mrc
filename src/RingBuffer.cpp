@@ -29,7 +29,7 @@ const unsigned int  RingBuffer::STATUS_FULL = 0;
 
 
 RingBuffer::RingBuffer(unsigned int buf_size) {
-    data     = (byte *)malloc(sizeof(byte) * buf_size);
+    data     = (char *)malloc(sizeof(char) * buf_size);
     capacity = buf_size;
     position = 0;
     length   = 0;
@@ -52,15 +52,15 @@ int RingBuffer::getCapacity() {
     return capacity;
 }
 
-byte RingBuffer::peek(unsigned int index) {
-    byte b = data[(position + index) % capacity];
+char RingBuffer::peek(unsigned int index) {
+    char b = data[(position + index) % capacity];
 
     return b;
 }
 
-void RingBuffer::put(byte in) {
+void RingBuffer::put(char in) {
     // if (length < capacity) {
-    // save data byte at end of buffer
+    // save data char at end of buffer
     data[(position + length) % capacity] = in;
 
     // increment the length
@@ -74,10 +74,10 @@ void RingBuffer::put(byte in) {
     // return 0;
 }
 
-int RingBuffer::putBytes(byte *bytes, unsigned int bytesLength) {
-    if (length + bytesLength < capacity) {
-        for (size_t i = 0; i < bytesLength; i++) {
-            this->put(bytes[i]);
+int RingBuffer::putBytes(char *chars, unsigned int charsLength) {
+    if (length + charsLength < capacity) {
+        for (size_t i = 0; i < charsLength; i++) {
+            this->put(chars[i]);
         }
         this->put(RingBuffer::END);
         return RingBuffer::STATUS_OK;
@@ -87,9 +87,9 @@ int RingBuffer::putBytes(byte *bytes, unsigned int bytesLength) {
     return RingBuffer::STATUS_FULL;
 }
 
-void RingBuffer::putInFront(byte in) {
+void RingBuffer::putInFront(char in) {
     // if (length < capacity) {
-    // save data byte at end of buffer
+    // save data char at end of buffer
     if (position == 0) position = capacity - 1;
     else position = (position - 1) % capacity;
     data[position] = in;
@@ -104,15 +104,15 @@ void RingBuffer::putInFront(byte in) {
     // return 0;
 }
 
-int RingBuffer::putBytesInFront(byte *bytes, unsigned int bytesLength) {
-    if (length + bytesLength < capacity) {
+int RingBuffer::putBytesInFront(char *chars, unsigned int charsLength) {
+    if (length + charsLength < capacity) {
         this->putInFront(RingBuffer::END);
 
-        unsigned int i = bytesLength - 1;
+        unsigned int i = charsLength - 1;
 
         while (i--) // reverse iterate
         {
-            this->putInFront(bytes[i]);
+            this->putInFront(chars[i]);
         }
 
         return RingBuffer::STATUS_OK;
@@ -122,8 +122,8 @@ int RingBuffer::putBytesInFront(byte *bytes, unsigned int bytesLength) {
     return RingBuffer::STATUS_FULL;
 }
 
-byte RingBuffer::get() {
-    byte b = RingBuffer::END;
+char RingBuffer::get() {
+    char b = RingBuffer::END;
 
 
     if (length > 0) {
@@ -137,8 +137,8 @@ byte RingBuffer::get() {
     return b;
 }
 
-unsigned int RingBuffer::getMessage(byte message[]) {
-    byte b;
+unsigned int RingBuffer::getMessage(char message[]) {
+    char b;
 
     unsigned int length = 0;
 
@@ -151,8 +151,8 @@ unsigned int RingBuffer::getMessage(byte message[]) {
     return --length;
 }
 
-byte RingBuffer::getByte() {
-    byte b = RingBuffer::END;
+char RingBuffer::getByte() {
+    char b = RingBuffer::END;
 
 
     if (length > 0) {
@@ -166,8 +166,8 @@ byte RingBuffer::getByte() {
     return b;
 }
 
-byte RingBuffer::getFromBack() {
-    byte b = 0;
+char RingBuffer::getFromBack() {
+    char b = 0;
 
     if (length > 0) {
         b = data[(position + length - 1) % capacity];
