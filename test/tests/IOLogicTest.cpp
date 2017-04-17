@@ -4,10 +4,7 @@
 
 #include "../fake/fastRW.h"
 
-// #include "fastRW.h"
-
-#include "../src/IOLogic.h"
-#include "../src/IOLogic.cpp"
+#include "IOLogic.h"
 
 
 using ::testing::Return;

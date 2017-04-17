@@ -1,4 +1,7 @@
 #include "gtest/gtest.h"
+
+#include "Arduino.h"
+
 #include "Kinematic.h"
 
 

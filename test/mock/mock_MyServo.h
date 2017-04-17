@@ -10,4 +10,4 @@ public:
     MOCK_METHOD0(getPinNumber,    int());
 };
 
-#endif /* ifndef MY_SERVO_H */
+#endif /* ifndef MOCK_MY_SERVO_H */

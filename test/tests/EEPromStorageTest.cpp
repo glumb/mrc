@@ -4,7 +4,7 @@
 #include "EEPROM.h"
 #include "Arduino.h"
 
-#include "../src/EEPromStorage.h"
+#include "EEPromStorage.h"
 
 using ::testing::Return;
 
@@ -14,8 +14,6 @@ TEST(EEPromStorage, clear) {
     int expected_value   = 0;
 
     EXPECT_CALL(*mock, write(expected_address, expected_value));
-
-    // EXPECT_CALL(*mock, read(expected_value));
 
     EEPromStorage storage;
     storage.clear();

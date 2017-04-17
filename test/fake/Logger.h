@@ -7,38 +7,38 @@
 class Logger {
 public:
 
-    explicit Logger(String domain);
+    explicit Logger(String domain) {}
 
     enum LOGLEVEL { ERROR, WARNING, INFO };
 
     static unsigned long usTime;
     static unsigned long usTimeSinceLastCall;
 
-    void resetTime();
+    void resetTime()            {}
 
-    void time(String eventName);
+    void time(String eventName) {}
 
     void error(String text,
-               bool   test = false);
+               bool   test = false) {}
 
     void warning(String text,
-                 bool   test = false);
+                 bool   test = false) {}
 
     void info(String text,
-              bool   test = false);
+              bool   test = false) {}
 
     void info(char *text,
-              bool  test = false);
+              bool  test = false) {}
 
 private:
 
     void log(LOGLEVEL lvl,
              String   text,
-             bool     test = false);
+             bool     test = false) {}
 
     void log(LOGLEVEL lvl,
              char    *text,
-             bool     test = false);
+             bool     test = false) {}
 
     String domain;
 };

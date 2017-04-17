@@ -1,6 +1,10 @@
 #include "gtest/gtest.h"
-#include "../src/RingBuffer.h"
-#include "../src/RingBuffer.cpp"
+
+#include "Arduino.h"
+#include "../fake/Logger.h"
+
+#include "RingBuffer.h"
+// #include "../src/RingBuffer.cpp"
 
 
 TEST(RingBufferTest, canNotPutMoreBytesThanSize)
@@ -28,7 +32,7 @@ TEST(RingBufferTest, getMessageFromBuffer)
 
 
     char returnedMessage[10];
-    int length = Rb.getMessage(returnedMessage);
+    int  length = Rb.getMessage(returnedMessage);
 
     EXPECT_EQ(length,             3);
     EXPECT_EQ(returnedMessage[1], bytes[1]);

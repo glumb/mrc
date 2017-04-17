@@ -132,7 +132,7 @@ void MRCPParser::parseMRCP(char incomingByte) {
                 // frame too long
                 inputBufferFull = true;
                 logger.warning("input buffer full! pointer: " + String(
-                                   inputByteBufferPointer) + " size: " + INPUT_BUFFER_SIZE + " (frame too long)");
+                                   inputByteBufferPointer) + " size: " + String(INPUT_BUFFER_SIZE) + " (frame too long)");
             }
         } else {
             //  logger.info("I received unknow char: " +String((char)incomingByte)+" ["+String(incomingByte)+"]");

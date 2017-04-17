@@ -76,6 +76,7 @@ class Serial_ {
 
     static size_t println(const char[]);
     static size_t println(const std::string);
+    static size_t println(String s);
     static size_t println(char);
     static size_t println(unsigned char, int = DEC);
     static size_t println(int, int = DEC);

@@ -5,6 +5,8 @@ project(tests)
 enable_language(C)
 enable_language(CXX)
 
+add_definitions(-DUNIT_TEST)
+
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
@@ -47,17 +49,11 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
                         "${gmock_SOURCE_DIR}/include")
 endif()
 
-set(SOURCES
-  ../src/Kinematic.cpp
-  ../src/MRILParser.cpp
-  ../src/RobotController.cpp
-  # ../src/RingBuffer.cpp
 
-)
-
-
-file(GLOB TEST_FILES tests/*.cpp)
+file(GLOB SOURCES ../src/*.cpp)
+list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../src/main.cpp)
 file(GLOB FAKE_FILES fake/*.cpp)
+file(GLOB TEST_FILES tests/*.cpp)
 file(GLOB MOCKS mock/src/*.cc)
 
 add_executable(tests

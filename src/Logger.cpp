@@ -1,9 +1,13 @@
 #include "Logger.h"
 
-
 // 0> ONLY TEST 1> ERROR 2> WARNING 3> INFO
 #define LOG_LEVEL 3
-#define DEBUG 1
+
+#ifndef UNIT_TEST
+
+# define DEBUG 1
+
+#endif // ifndef UNIT_TEST
 
 // #define DEBUG_NAMESPACE "handleSerialCommand"
 // #define DEBUG_NAMESPACE "RobotController"
@@ -60,7 +64,7 @@ void Logger::info(String text, bool test) {
   #endif // if LOG_LEVEL > 2
 }
 
-void Logger::info(unsigned char *text, bool test) {
+void Logger::info(char *text, bool test) {
   #if LOG_LEVEL > 2
     this->log(INFO, text, test);
   #endif // if LOG_LEVEL > 2
@@ -107,7 +111,7 @@ void Logger::log(LOGLEVEL lvl, String text, bool test) {
   #endif // ifdef (DEBUG)
 }
 
-void Logger::log(LOGLEVEL lvl, unsigned char *text, bool test) {
+void Logger::log(LOGLEVEL lvl,  char *text, bool test) {
   #ifdef DEBUG
 
     # ifdef DEBUG_NAMESPACE

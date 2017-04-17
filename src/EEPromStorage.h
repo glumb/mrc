@@ -3,7 +3,7 @@
 
 
 #include <EEPROM.h>
-#include <Logger.h>
+#include "Logger.h"
 
 #define EEPROM_SIZE 2048 // Teensy 3.2
 

@@ -73,6 +73,14 @@ size_t Serial_::print(String s) {
   assert (gSerialMock != NULL);
   return gSerialMock->print(s);
 }
+size_t Serial_::print(std::string s) {
+  if (printToCout) {
+    std::cout << s;
+    return 0;
+  }
+  assert (gSerialMock != NULL);
+  return gSerialMock->print(s);
+}
 
 size_t Serial_::print(char c) {
   if (printToCout) {
@@ -145,6 +153,25 @@ size_t Serial_::println(const char *s) {
   assert (gSerialMock != NULL);
   return gSerialMock->println(s);
 }
+
+size_t Serial_::println(std::string s) {
+  if (printToCout) {
+    std::cout << s;
+    return 0;
+  }
+  assert (gSerialMock != NULL);
+  return gSerialMock->print(s);
+}
+
+size_t Serial_::println(String s) {
+  if (printToCout) {
+    std::cout << s;
+    return 0;
+  }
+  assert (gSerialMock != NULL);
+  return gSerialMock->print(s);
+}
+
 
 size_t Serial_::println(char c) {
   if (printToCout) {

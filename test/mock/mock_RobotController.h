@@ -13,7 +13,7 @@ public:
                          Kinematic *Kin,
                          void(*logicToPhysicalAngles)(float[6]))
         : RobotController(servos,Kin,logicToPhysicalAngles){};
-        
+
     MOCK_METHOD2(setTargetPose, void(RobotController::POSITION pos, float value));
 };
 
