@@ -64,7 +64,7 @@ void Logger::info(String text, bool test) {
   #endif // if LOG_LEVEL > 2
 }
 
-void Logger::info(char *text, bool test) {
+void Logger::info(const char *text, bool test) {
   #if LOG_LEVEL > 2
     this->log(INFO, text, test);
   #endif // if LOG_LEVEL > 2
@@ -111,7 +111,7 @@ void Logger::log(LOGLEVEL lvl, String text, bool test) {
   #endif // ifdef (DEBUG)
 }
 
-void Logger::log(LOGLEVEL lvl,  char *text, bool test) {
+void Logger::log(LOGLEVEL lvl,  const char *text, bool test) {
   #ifdef DEBUG
 
     # ifdef DEBUG_NAMESPACE
@@ -128,7 +128,7 @@ void Logger::log(LOGLEVEL lvl,  char *text, bool test) {
             unsigned int i = 0;
 
             while (text[i] !=  0) {
-                Serial.print((char)text[i]);
+                Serial.print((const char)text[i]);
                 i++;
             }
             Serial.println("");
@@ -143,7 +143,7 @@ void Logger::log(LOGLEVEL lvl,  char *text, bool test) {
             unsigned int i = 0;
 
             while (text[i] !=  0) {
-                Serial.print((char)text[i]);
+                Serial.print((const char)text[i]);
                 i++;
             }
             Serial.println("");
@@ -158,7 +158,7 @@ void Logger::log(LOGLEVEL lvl,  char *text, bool test) {
             unsigned int i = 0;
 
             while (text[i] !=  0) {
-                Serial.print((char)text[i]);
+                Serial.print((const char)text[i]);
                 i++;
             }
             Serial.println("");

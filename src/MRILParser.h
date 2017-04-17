@@ -55,7 +55,7 @@ public:
                MRCPR                   & _MRCPR);
 
     void parse(char mrilInstruction[],
-               int  length);
+               unsigned int  length);
 
     void process();
 
@@ -70,11 +70,11 @@ private:
 
     long commandNumber = 0;
 
-    MRCPR& _MRCPR;
     RobotController& _RobotController;
-    AdditionalAxisController& _AdditionalAxisController;
     IOLogic& _IOLogic;
+    AdditionalAxisController& _AdditionalAxisController;
     WaitController& _WaitController;
+    MRCPR& _MRCPR;
 };
 
 #endif // ifndef MRILPARSER_H

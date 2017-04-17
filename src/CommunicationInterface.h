@@ -15,7 +15,7 @@ public:
 
     virtual void transmit(char message[], int length) {}
 
-    virtual void transmit(char string[])              {}
+    virtual void transmit(const char string[])              {}
 
     virtual void transmit(char c)                     {}
 

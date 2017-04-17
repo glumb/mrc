@@ -21,7 +21,7 @@ MRILParser::MRILParser(RobotController         & _RobotController,
     _WaitController(_WaitController),
     _MRCPR(_MRCPR) {}
 
-void MRILParser::parse(char mrilInstruction[], int length) {
+void MRILParser::parse(char mrilInstruction[], unsigned int length) {
     // cN changes when a non read Instruction is executed.
     int tmpCommandNumber = -1;
 
@@ -59,9 +59,9 @@ void MRILParser::parse(char mrilInstruction[], int length) {
             }
         } else  {
             // do not parse unknown chars
-            continue;
             Serial.print("unknown char ");
             Serial.println((char)c);
+            continue;
         }
 
         _logger.info("ringBuffer parse char " + String((char)c));

@@ -41,7 +41,7 @@ public:
         this->transmit(message);
     }
 
-    void transmit(char string[]) {
+    void transmit(const char string[]) {
         Serial.print(string);
     }
 

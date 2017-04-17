@@ -18,7 +18,7 @@ public:
 
 private:
 
-    unsigned long waitUntil;
+    unsigned long waitUntil = 0;
 };
 
 #endif // ifndef WAIT_CONTROLLER_H

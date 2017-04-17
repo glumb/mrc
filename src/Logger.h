@@ -27,7 +27,7 @@ public:
     void info(String text,
               bool   test = false);
 
-    void info(char *text,
+    void info(const char *text,
               bool  test = false);
 
 private:
@@ -37,7 +37,7 @@ private:
              bool     test = false);
 
     void log(LOGLEVEL lvl,
-             char    *text,
+             const char    *text,
              bool     test = false);
 
     String domain;

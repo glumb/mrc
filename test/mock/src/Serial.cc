@@ -237,8 +237,8 @@ size_t Serial_::write(const uint8_t *buffer, size_t size) {
 }
 
 uint8_t Serial_::begin(uint32_t port) {
-  if (gSerialMock != NULL) {
-    /* code */
+  if (gSerialMock == NULL) {
+    gSerialMock = serialMockInstance();
   }
   assert (gSerialMock != NULL);
   return gSerialMock->begin(port);
