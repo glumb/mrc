@@ -1,4 +1,4 @@
-#include "arduino-mock/IRremote.h"
+#include "IRremote.h"
 
 // Taken from IRremoteInt.h
 #define ERR 0

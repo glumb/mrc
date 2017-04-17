@@ -1,4 +1,4 @@
-#include "arduino-mock/serialHelper.h"
+#include "serialHelper.h"
 
 stringCapture::stringCapture()
   : d() {

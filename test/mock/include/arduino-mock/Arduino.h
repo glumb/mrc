@@ -5,6 +5,7 @@
 #define ARDUINO_H
 
 #include <stdint.h>
+#include "AString.h"
 #include "Serial.h"
 
 #ifdef __cplusplus
@@ -125,44 +126,9 @@ class ArduinoMock {
 ArduinoMock* arduinoMockInstance();
 void releaseArduinoMock();
 
-namespace {
-std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-    }
-    return str;
-}
-}
 
-class String : public std::string {
- public:
-  String() {}
-  String(const String& string) : String(string.c_str()) {}
-  String(const std::string& string) : std::string(string) {}
-  String(const char* string) : std::string(string) {}
-  String(const float val) : std::string(std::to_string(val)) {}
 
-  String substring(int start) {
-    return substr(start);
-  }
-  String substring(int start, int end) {
-    return substr(start, end-start);
-  }
-
-  String remove(int start) {
-    return erase(start);
-  }
-
-  void replace(const String& from, const String& to) {
-    ReplaceAll(*this, from, to);
-  }
-
-  int indexOf(const char needle) {
-    return find(needle);
-  }
-};
+// extern String;
 
 
 #endif // ARDUINO_H

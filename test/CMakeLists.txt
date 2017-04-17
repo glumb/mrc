@@ -15,6 +15,7 @@ include_directories(../src) #add .h
 include_directories(fake) #add .h
 
 include_directories(mock/include/arduino-mock)
+include_directories(mock)
 
 include(CTest)
 
@@ -48,12 +49,16 @@ endif()
 
 set(SOURCES
   ../src/Kinematic.cpp
-  ../src/RingBuffer.cpp
+  ../src/MRILParser.cpp
+  ../src/RobotController.cpp
+  # ../src/RingBuffer.cpp
+
 )
+
 
 file(GLOB TEST_FILES tests/*.cpp)
 file(GLOB FAKE_FILES fake/*.cpp)
-file(GLOB MOCKS mock/src/*.cpp)
+file(GLOB MOCKS mock/src/*.cc)
 
 add_executable(tests
                ${TEST_FILES}

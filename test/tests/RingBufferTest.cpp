@@ -1,11 +1,12 @@
 #include "gtest/gtest.h"
-#include "RingBuffer.h"
+#include "../src/RingBuffer.h"
+#include "../src/RingBuffer.cpp"
 
 
 TEST(RingBufferTest, canNotPutMoreBytesThanSize)
 {
     RingBuffer Rb(2);
-    unsigned char bytes[3] = { '1', '2', '3' };
+    char bytes[3] = { '1', '2', '3' };
 
     EXPECT_EQ(Rb.putBytes(bytes, 3), RingBuffer::STATUS_FULL);
 }
@@ -13,7 +14,7 @@ TEST(RingBufferTest, canNotPutMoreBytesThanSize)
 TEST(RingBufferTest, canPutBytesInBuffer)
 {
     RingBuffer Rb(10);
-    unsigned char bytes[3] = { '1', '2', '3' };
+    char bytes[3] = { '1', '2', '3' };
 
     EXPECT_EQ(Rb.putBytes(bytes, 3), RingBuffer::STATUS_OK);
 }
@@ -21,13 +22,13 @@ TEST(RingBufferTest, canPutBytesInBuffer)
 TEST(RingBufferTest, getMessageFromBuffer)
 {
     RingBuffer Rb(10);
-    unsigned char bytes[3] = { '1', '2', '3' };
+    char bytes[3] = { '1', '2', '3' };
 
     Rb.putBytes(bytes, 3);
 
 
-    byte returnedMessage[10];
-    unsigned int length = Rb.getMessage(returnedMessage);
+    char returnedMessage[10];
+    int length = Rb.getMessage(returnedMessage);
 
     EXPECT_EQ(length,             3);
     EXPECT_EQ(returnedMessage[1], bytes[1]);
@@ -36,7 +37,7 @@ TEST(RingBufferTest, getMessageFromBuffer)
 TEST(RingBufferTest, addENDAfterMessage)
 {
     RingBuffer Rb(10);
-    unsigned char bytes[3] = { '1', '2', '3' };
+    char bytes[3] = { '1', '2', '3' };
 
     Rb.putBytes(bytes, 3);
 
@@ -49,7 +50,7 @@ TEST(RingBufferTest, addENDAfterMessage)
 TEST(RingBufferTest, getFromBack)
 {
     RingBuffer Rb(10);
-    unsigned char bytes[3] = { '1', '2', '3' };
+    char bytes[3] = { '1', '2', '3' };
 
     Rb.putBytes(bytes, 3);
 

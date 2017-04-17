@@ -1,4 +1,4 @@
-#include "arduino-mock/Wire.h"
+#include "Wire.h"
 
 static WireMock* p_WireMock = NULL;
 WireMock* WireMockInstance() {

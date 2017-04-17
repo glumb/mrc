@@ -8,6 +8,7 @@
 #include <gmock/gmock.h>
 #include "Arduino.h"
 
+
 #define DEC 10
 #define HEX 16
 #define OCT 8
@@ -22,7 +23,7 @@ class SerialMock {
     MOCK_METHOD2(write, size_t(const uint8_t *buffer, size_t size));
 
     MOCK_METHOD1(print, size_t(const char[]));
-    // MOCK_METHOD1(print, size_t(const String));
+    MOCK_METHOD1(print, size_t(String));
     MOCK_METHOD1(print, size_t(char));
     MOCK_METHOD2(print, size_t(unsigned char, int));
     MOCK_METHOD2(print, size_t(int, int));
@@ -61,7 +62,9 @@ class Serial_ {
     static void setPrintToCout(bool flag);
 
   public:
+
     static size_t print(const char[]);
+    static size_t print(String s);
     static size_t print(const std::string);
     static size_t print(char);
     static size_t print(unsigned char, int = DEC);

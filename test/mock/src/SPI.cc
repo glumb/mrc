@@ -1,4 +1,4 @@
-#include "arduino-mock/SPI.h"
+#include "SPI.h"
 
 static SPIMock* p_SPIMock = NULL;
 SPIMock* SPIMockInstance() {

@@ -1,6 +1,6 @@
 // Copyright 2014 http://switchdevice.com
 
-#include "arduino-mock/Serial.h"
+#include "Serial.h"
 
 static SerialMock* gSerialMock = NULL;
 SerialMock* serialMockInstance() {
@@ -50,13 +50,22 @@ template<typename T> void printBase(T num, int base) {
   std::cout << num << std::dec;
 }
 
-bool Serial_::printToCout = false;
+bool Serial_::printToCout = true;
 
 void Serial_::setPrintToCout(bool flag) {
   printToCout = flag;
 }
 
 size_t Serial_::print(const char *s) {
+  if (printToCout) {
+    std::cout << s;
+    return 0;
+  }
+  assert (gSerialMock != NULL);
+  return gSerialMock->print(s);
+}
+
+size_t Serial_::print(String s) {
   if (printToCout) {
     std::cout << s;
     return 0;
@@ -201,6 +210,9 @@ size_t Serial_::write(const uint8_t *buffer, size_t size) {
 }
 
 uint8_t Serial_::begin(uint32_t port) {
+  if (gSerialMock != NULL) {
+    /* code */
+  }
   assert (gSerialMock != NULL);
   return gSerialMock->begin(port);
 }
