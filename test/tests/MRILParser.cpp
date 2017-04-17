@@ -49,7 +49,7 @@ TEST(MRILParserTest, setOutputToHigh)
     WaitController W;
     MRCPR Mrcpr;
 
-    MRILParser MRILp(R, IO, &A, W, Mrcpr);
+    MRILParser MRILp(R, IO, A, W, Mrcpr);
 
 
     ArduinoMock *arduinoMock = arduinoMockInstance();
@@ -87,7 +87,7 @@ TEST(MRILParserTest, setX)
     WaitController W;
     MRCPR Mrcpr;
 
-    MRILParser MRILp(R, IO, &A, W, Mrcpr);
+    MRILParser MRILp(R, IO, A, W, Mrcpr);
 
 
 

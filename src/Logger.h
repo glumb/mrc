@@ -7,7 +7,7 @@
 class Logger {
 public:
 
-    Logger(String domain);
+    explicit Logger(String domain);
 
     enum LOGLEVEL { ERROR, WARNING, INFO };
 

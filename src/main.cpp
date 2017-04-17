@@ -58,7 +58,7 @@ void TEST_EEPROMSTORAGE() {
     E.appendMessage(m2, 4);
 
     char message[10];
-    char length = E.getMessage(0, message);
+   E.getMessage(0, message);
 
     if (message[1] == m[1]) {
         Serial.print("ok");
@@ -126,7 +126,7 @@ void TEST_MRILPARSER() {
     WaitController  W;
     MRCPR Mrcpr;
 
-    MRILParser MRIL(R,IO,&A,W,Mrcpr);
+    MRILParser MRIL(R,IO,A,W,Mrcpr);
 
     char mri[] = {'W','3','0'};
     MRIL.parse(mri,3);

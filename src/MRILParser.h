@@ -48,11 +48,11 @@ const unsigned int MRIL_MOVEMENT_METHOD_CIRCULAR = 2;
 class MRILParser {
 public:
 
-    MRILParser(RobotController          _RobotController,
-               IOLogic                   _IOLogic,
-               AdditionalAxisController *_AdditionalAxisController,
-               WaitController            _WaitController,
-               MRCPR                     _MRCPR);
+    MRILParser(RobotController         & _RobotController,
+               IOLogic                 & _IOLogic,
+               AdditionalAxisController& _AdditionalAxisController,
+               WaitController          & _WaitController,
+               MRCPR                   & _MRCPR);
 
     void parse(char mrilInstruction[],
                int  length);
@@ -70,11 +70,11 @@ private:
 
     long commandNumber = 0;
 
-    MRCPR _MRCPR;
-    RobotController _RobotController;
-    AdditionalAxisController *_AdditionalAxisController;
-    IOLogic _IOLogic;
-    WaitController _WaitController;
+    MRCPR& _MRCPR;
+    RobotController& _RobotController;
+    AdditionalAxisController& _AdditionalAxisController;
+    IOLogic& _IOLogic;
+    WaitController& _WaitController;
 };
 
 #endif // ifndef MRILPARSER_H

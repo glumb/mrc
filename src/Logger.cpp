@@ -45,25 +45,25 @@ void Logger::resetTime() {
 void Logger::error(String text, bool test) {
   #if LOG_LEVEL > 0
     this->log(ERROR, text, test);
-  #endif
+  #endif // if LOG_LEVEL > 0
 }
 
 void Logger::warning(String text, bool test) {
   #if LOG_LEVEL > 1
     this->log(WARNING, text, test);
-  #endif
+  #endif // if LOG_LEVEL > 1
 }
 
 void Logger::info(String text, bool test) {
   #if LOG_LEVEL > 2
     this->log(INFO, text, test);
-  #endif
+  #endif // if LOG_LEVEL > 2
 }
 
 void Logger::info(unsigned char *text, bool test) {
   #if LOG_LEVEL > 2
     this->log(INFO, text, test);
-  #endif
+  #endif // if LOG_LEVEL > 2
 }
 
 void Logger::log(LOGLEVEL lvl, String text, bool test) {

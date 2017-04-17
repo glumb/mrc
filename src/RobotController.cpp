@@ -350,6 +350,7 @@ float RobotController::getCurrentPose(POSITION position) {
         angles[i] = this->Servos[i]->getCurrentAngle();
     }
     physicaltoLogicAngles(angles);
+
     this->IK->forward(
         angles[0],
         angles[1],

@@ -551,7 +551,7 @@ void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, flo
     }
 }
 
-void Kinematic::cross(float vectorA[2], float  vectorB[2], float result[3]) {
+void Kinematic::cross(float vectorA[3], float  vectorB[3], float result[3]) {
     result[0] =  vectorA[1] * vectorB[2] - vectorA[2] * vectorB[1];
     result[1] = vectorA[2] * vectorB[0] - vectorA[0] * vectorB[2];
     result[2] = vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0];
@@ -561,7 +561,7 @@ float Kinematic::dot(float vectorA[3], float vectorB[3]) {
     return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1] + vectorA[2] * vectorB[2];
 }
 
-float Kinematic::angleBetween(float vectorA[2], float vectorB[2], float referenceVector[2]) {
+float Kinematic::angleBetween(float vectorA[3], float vectorB[3], float referenceVector[3]) {
     // angle = atan2(norm(cross(a, b)), dot(a, b))
     float cross[3];
 
@@ -578,7 +578,7 @@ float Kinematic::angleBetween(float vectorA[2], float vectorB[2], float referenc
     return angle * sign;
 }
 
-float Kinematic::length3(float vector[2]) {
+float Kinematic::length3(float vector[3]) {
     return sqrt(pow(vector[0], 2) +  pow(vector[1], 2) +  pow(vector[2], 2));
 }
 

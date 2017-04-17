@@ -8,10 +8,6 @@
 #include "SerialIO.h"
 
 
-
-
-
-
 // todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
 
 class MRCPR {
@@ -27,7 +23,6 @@ public:
     }
 
 private:
-
 };
 
-#endif
+#endif // ifndef MRCPR_H

@@ -22,7 +22,7 @@ public:
         // logger.resetTime();
 
         while (Serial.available() && bytesRead < READ_NUMBER_OF_BYTES_FROM_SERIAL_BEFORE_CONTINUE) {
-            // logger.time("before serial read");
+            // todo check if is nullpointer?
             this->dataCallback(Serial.read());
 
             // logger.time("after serial read");

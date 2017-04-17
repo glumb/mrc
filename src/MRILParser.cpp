@@ -10,11 +10,11 @@ namespace {
 Logger _logger("MRILParser");
 }
 
-MRILParser::MRILParser(RobotController          _RobotController,
-                       IOLogic                   _IOLogic,
-                       AdditionalAxisController *_AdditionalAxisController,
-                       WaitController            _WaitController,
-                       MRCPR                     _MRCPR) :
+MRILParser::MRILParser(RobotController         & _RobotController,
+                       IOLogic                 & _IOLogic,
+                       AdditionalAxisController& _AdditionalAxisController,
+                       WaitController          & _WaitController,
+                       MRCPR                   & _MRCPR) :
     _RobotController(_RobotController),
     _IOLogic(_IOLogic),
     _AdditionalAxisController(_AdditionalAxisController),
@@ -116,7 +116,7 @@ void MRILParser::parse(char mrilInstruction[], int length) {
                     float value = atof(command + 1); //  V<val>
 
                     this->_RobotController.setMaxVelocity(value);
-                    this->_AdditionalAxisController->setVelocity(value);
+                    this->_AdditionalAxisController.setVelocity(value);
                 }
                 break;
             }
@@ -190,7 +190,7 @@ void MRILParser::parse(char mrilInstruction[], int length) {
                 this->_RobotController.setTargetAngle(option, value / 180.0 * PI);
 
                 if (option >= 6) {
-                    this->_AdditionalAxisController->setAxisToAngle(option - 6, value / 180.0 * PI);
+                    this->_AdditionalAxisController.setAxisToAngle(option - 6, value / 180.0 * PI);
                 }
 
                 // servos[option]->setTargetRadAngle(value / 180 * PI);
@@ -278,9 +278,9 @@ void MRILParser::parse(char mrilInstruction[], int length) {
 
 void MRILParser::process() {
     if (this->_IOLogic.isDone() && !this->_RobotController.isMoving() &&  this->_WaitController.isDone()) { // todo add additionalAxis
-        if (this->commandNumber > 0) {                                                                       // command number exists
+        if (this->commandNumber > 0) {                                                                      // command number exists
             this->_MRCPR.sendMessage(String(MRIL_COMMAND_NUMBER) + "1" + String(this->commandNumber));
-            this->commandNumber = -1;                                                                        // command was executed
+            this->commandNumber = -1;                                                                       // command was executed
         }
         this->done = true;
     } else {

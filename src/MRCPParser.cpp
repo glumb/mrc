@@ -9,11 +9,14 @@ static Logger logger("MRCPParser");
 }
 
 
-MRCPParser::MRCPParser(EEPromStorage _EEPromStorage, RingBuffer _RingBuffer, MRILParser _MRILParser,CommunicationInterface _CommunicationInterface) :
+MRCPParser::MRCPParser(EEPromStorage&          _EEPromStorage,
+                       RingBuffer&             _RingBuffer,
+                       MRILParser&             _MRILParser,
+                       CommunicationInterface& _CommunicationInterface) :
     _EEPromStorage(_EEPromStorage),
     _RingBuffer(_RingBuffer),
     _MRILParser(_MRILParser),
-            _CommunicationInterface(_CommunicationInterface) {}
+    _CommunicationInterface(_CommunicationInterface) {}
 
 void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     if (length == 0) { // dont parse an empty command
@@ -34,7 +37,6 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
         break;
     }
-
 
     case MRCP_COMMAND_QUEUE_IN:
     {
