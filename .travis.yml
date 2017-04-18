@@ -25,9 +25,11 @@
 #
 
 language: cpp
-compiler: gcc
+compiler:
+  - clang
+  - gcc
 dist: trusty
-sudo: false
+sudo: true
 
 python:
   - "2.7"
