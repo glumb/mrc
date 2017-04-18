@@ -50,7 +50,7 @@ template<typename T> void printBase(T num, int base) {
   std::cout << num << std::dec;
 }
 
-bool Serial_::printToCout = true;
+bool Serial_::printToCout = false;
 
 void Serial_::setPrintToCout(bool flag) {
   printToCout = flag;
@@ -61,6 +61,7 @@ size_t Serial_::print(const char *s) {
     std::cout << s;
     return 0;
   }
+    assert (s != NULL);
   assert (gSerialMock != NULL);
   return gSerialMock->print(s);
 }
@@ -150,6 +151,7 @@ size_t Serial_::println(const char *s) {
     std::cout << s << std::endl;
     return 0;
   }
+  assert (s != NULL);
   assert (gSerialMock != NULL);
   return gSerialMock->println(s);
 }
@@ -228,6 +230,7 @@ size_t Serial_::write(uint8_t val) {
 
 size_t Serial_::write(const char *str) {
   assert (gSerialMock != NULL);
+    assert (str != NULL);
   return gSerialMock->write(str);
 }
 
@@ -241,7 +244,8 @@ uint8_t Serial_::begin(uint32_t port) {
     gSerialMock = serialMockInstance();
   }
   assert (gSerialMock != NULL);
-  return gSerialMock->begin(port);
+  return 1;
+  // return gSerialMock->begin(port);
 }
 
 void Serial_::flush() {

@@ -26,10 +26,8 @@
 
 language: cpp
 compiler:
-  - clang
   - gcc
 dist: trusty
-sudo: true
 
 python:
   - "2.7"
@@ -42,9 +40,6 @@ addons:
 cache:
     directories:
         - "~/.platformio"
-
-before_install:
-    - pip install cpp-coveralls
 
 install:
     - pip install -U platformio

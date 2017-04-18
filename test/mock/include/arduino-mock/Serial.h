@@ -37,7 +37,7 @@ class SerialMock {
     MOCK_METHOD2(println, size_t(int, int));
     MOCK_METHOD0(println, size_t(void));
 
-    MOCK_METHOD1(begin, uint8_t(uint16_t));
+    MOCK_METHOD1(begin, uint8_t(uint32_t));
 
     MOCK_METHOD0(available, uint8_t());
     MOCK_METHOD0(read, uint8_t());
