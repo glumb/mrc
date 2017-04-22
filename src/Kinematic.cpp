@@ -15,11 +15,10 @@ void log(String text) {
 }
 
 Kinematic::Kinematic(float geometry[5][3]) {
-    // this->robotType = robotType;
     this->debug = false;
 
-    this->V1_length_x_y   =  sqrt(pow(geometry[1][0], 2) +  pow(geometry[1][1], 2));
-    this->V4_length_x_y_z =  sqrt(pow(geometry[4][0], 2) +  pow(geometry[4][1], 2) +  pow(geometry[4][2], 2));
+    this->V1_length_x_z   =  sqrt(pow(geometry[1][0], 2) +  pow(geometry[1][2], 2));
+    this->V4_length_x_y_z =  sqrt(pow(geometry[4][0], 2) +  pow(geometry[4][2], 2) +  pow(geometry[4][1], 2));
 
     for (int i = 0; i < 5; i++) {
         this->geometry[i][0] = geometry[i][0];
@@ -42,17 +41,14 @@ Kinematic::Kinematic(float geometry[5][3]) {
         this->A_corrected[i] = 0;
     }
 
-    this->A_corrected[1] -=  PI / 2.0;
-    this->A_corrected[1] +=  atan2(geometry[1][0], geometry[1][1]);                                       // correct offset bone
+    this->A_corrected[1] +=  PI / 2.0;
+    this->A_corrected[1] -=  atan2(geometry[1][0], geometry[1][2]);                                       // correct offset bone
 
-    this->A_corrected[2] -=  PI / 2.0;
-    this->A_corrected[2] -=  atan2((geometry[2][1] + geometry[3][1]), (geometry[2][0] + geometry[3][0])); // correct offset bone V2,V3
-    this->A_corrected[2] -=  atan2(geometry[1][0], geometry[1][1]);                                       // correct bone offset of V1
+    this->A_corrected[2] +=  PI / 2.0;
+    this->A_corrected[2] +=  atan2((geometry[2][2] + geometry[3][2]), (geometry[2][0] + geometry[3][0])); // correct offset bone V2,V3
+    this->A_corrected[2] +=  atan2(geometry[1][0], geometry[1][2]);                                       // correct bone offset of V1
 
-    // this->A_corrected[4] +=  PI / 2;
-    this->A_corrected[4] +=  atan2(geometry[4][1], geometry[4][0]);
-
-    // console.log("---------------------------------" +  atan2(geometry[4][1], geometry[4][0]))
+    this->A_corrected[4] +=  PI / 2;
 }
 
 // takes ~11 ms on Atmega328p nano ~6ms without println
@@ -60,30 +56,20 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     // console.log(x, y, z, a, b, c)
 
 
-    float ca = cos(a);
-    float sa = sin(a);
-    float cb = cos(b);
-    float sb = sin(b);
     float cc = cos(c);
     float sc = sin(c);
+    float cb = cos(b);
+    float sb = sin(b);
+    float ca = cos(a);
+    float sa = sin(a);
 
-    float targetVectorX[3] = {
-        cb *cc,
-        cb * sc,
-        -sb,
+
+    float targetVectorZ[3] = {
+        sb,
+        -sa * cb,
+        ca * cb,
     };
 
-    // if (this->robotType == ROBOT_TYPE::AXIS4) {
-    //     if ((abs(targetVectorX[0]) > 0.0001) || (abs(targetVectorX[1] + 1) > 0.0001) ||
-    //         (abs(targetVectorX[2]) > 0.0001)) {
-    //         logger.warning("cant reach pose, TCP axis must be vertical");
-    //
-    //         // return Kinematic::OUT_OF_RANGE; todo or use this
-    //     }
-    //     targetVectorX[0] = 0;
-    //     targetVectorX[0] = -1;
-    //     targetVectorX[0] = 0;
-    // }
 
     float R[6] = {
         this->A_corrected[0],
@@ -123,11 +109,11 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     log("J5 " + String(J[5][0]) + ", " + String(J[5][1]) + ", " + String(J[5][2]));
 
     // ---- J4 ----
-    // targetVectorX
+    // targetVectorZ
 
-    J[4][0] = x - this->V4_length_x_y_z * targetVectorX[0];
-    J[4][1] = y - this->V4_length_x_y_z * targetVectorX[1];
-    J[4][2] = z - this->V4_length_x_y_z * targetVectorX[2];
+    J[4][0] = x - this->V4_length_x_y_z * targetVectorZ[0];
+    J[4][1] = y - this->V4_length_x_y_z * targetVectorZ[1];
+    J[4][2] = z - this->V4_length_x_y_z * targetVectorZ[2];
 
     log("J4 " + String(J[4][0]) + ", " + String(J[4][1]) + ", " + String(J[4][2]));
 
@@ -137,10 +123,10 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     // ---- A0 ----
     // # J4
 
-    R[0] +=  PI / 2 -  acos(this->J_initial_absolute[4][2] / this->length2(J[4][2], J[4][0]));
-    R[0] +=  atan2(-J[4][2], J[4][0]);
+    R[0] +=  PI / 2.0 - acos(-this->J_initial_absolute[4][1] / this->length2(-J[4][1], J[4][0]));
+    R[0] +=  atan2(J[4][1], J[4][0]);
 
-    if (this->J_initial_absolute[4][2] > this->length2(J[4][2], J[4][0])) {
+    if (fabs(this->J_initial_absolute[4][1]) > this->length2(J[4][1], J[4][0])) { // todo check this
         log("out of reach");
     }
 
@@ -150,52 +136,52 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     // ---- J1 ----
     // # A0
 
-    J[1][0] =  cos(R[0]) * this->geometry[0][0] +  sin(R[0]) * this->geometry[0][2];
-    J[1][1] = this->geometry[0][1];
-    J[1][2] = -sin(R[0]) * this->geometry[0][0] +  cos(R[0]) * this->geometry[0][2];
+    J[1][0] = cos(R[0]) * this->geometry[0][0] +  sin(R[0]) * -this->geometry[0][1];
+    J[1][1] = sin(R[0]) * this->geometry[0][0] +  cos(R[0]) * this->geometry[0][1];
+    J[1][2] = this->geometry[0][2];
 
     log("J1 " + String(J[1][0]) + ", " + String(J[1][1]) + ", " + String(J[1][2]));
 
     // ---- rotate J4 into x,y plane ----
     // # J4 A0
 
-    float J4_x_y[3];
+    float J4_x_z[3];
 
-    J4_x_y[0] =  cos(R[0]) * J[4][0] + -sin(R[0]) * J[4][2];
-    J4_x_y[1] = J[4][1];
-    J4_x_y[2] =  sin(R[0]) * J[4][0] +  cos(R[0]) * J[4][2];
+    J4_x_z[0] =  cos(R[0]) * J[4][0] + sin(R[0]) * J[4][1];
+    J4_x_z[1] =  sin(R[0]) * J[4][0] +  cos(R[0]) * -J[4][1];
+    J4_x_z[2] = J[4][2];
 
 
     // ---- J1J4_projected_length_square ----
     // # J4 A0
 
-    float J1J4_projected_length_square =  pow(J4_x_y[0] - this->J_initial_absolute[1][0], 2) +  pow(
-        J4_x_y[1] - this->J_initial_absolute[1][1],
+    float J1J4_projected_length_square =  pow(J4_x_z[0] - this->J_initial_absolute[1][0], 2) +  pow(
+        J4_x_z[2] - this->J_initial_absolute[1][2],
         2); // not using  sqrt
-    log("J4_x_y[0]" + String(J4_x_y[0]));
+    log("J4_x_z[0]" + String(J4_x_z[0]));
     log("this->J_initial_absolute[1][0]" + String(this->J_initial_absolute[1][0]));
-    log("J4_x_y[1]" + String(J4_x_y[1]));
+    log("J4_x_z[1]" + String(J4_x_z[1]));
     log("this->J_initial_absolute[1][1]" + String(this->J_initial_absolute[1][1]));
 
     // ---- A2 ----
     // # J4 A0
 
-    float J2J4_length_x_y = this->length2(this->geometry[2][0] + this->geometry[3][0], this->geometry[2][1] + this->geometry[3][1]);
-    log("J2J4_length_x_y" + String(J2J4_length_x_y));
+    float J2J4_length_x_z = this->length2(this->geometry[2][0] + this->geometry[3][0], this->geometry[2][2] + this->geometry[3][2]);
+    log("J2J4_length_x_z" + String(J2J4_length_x_z));
     log("J1J4_projected_length_square" + String(J1J4_projected_length_square));
-    R[2] +=
+    R[2] -=
         acos((-J1J4_projected_length_square +
-              pow(J2J4_length_x_y, 2) +  pow(this->V1_length_x_y, 2)) / (2.0 * (J2J4_length_x_y) * this->V1_length_x_y));
+              pow(J2J4_length_x_z, 2) +  pow(this->V1_length_x_z, 2)) / (2.0 * (J2J4_length_x_z) * this->V1_length_x_z));
 
 
     // ---- A1 ----
     // # J4 A0
 
     float J1J4_projected_length =  sqrt(J1J4_projected_length_square);
-    R[1] +=  atan2((J4_x_y[1] - this->J_initial_absolute[1][1]), (J4_x_y[0] - this->J_initial_absolute[1][0]));
-    R[1] +=
-        acos((+J1J4_projected_length_square -
-              pow(J2J4_length_x_y, 2) +  pow(this->V1_length_x_y, 2)) / (2.0 * J1J4_projected_length * this->V1_length_x_y));
+    R[1] -=  atan2((J4_x_z[2] - this->J_initial_absolute[1][2]), (J4_x_z[0] - this->J_initial_absolute[1][0]));
+    R[1] -=
+        acos((J1J4_projected_length_square -
+              pow(J2J4_length_x_z, 2) +  pow(this->V1_length_x_z, 2)) / (2.0 * J1J4_projected_length * this->V1_length_x_z));
 
 
     // ---- J2 ----
@@ -204,35 +190,32 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     float ta =  cos(R[0]);
     float tb =  sin(R[0]);
     float tc = this->geometry[0][0];
-    float d  = this->geometry[0][1];
-    float e  = this->geometry[0][2];
+    float e  = -this->geometry[0][1];
+    float d  = this->geometry[0][2];
     float f  =  cos(R[1]);
     float g  =  sin(R[1]);
     float h  = this->geometry[1][0];
-    float i  = this->geometry[1][1];
-    float j  = this->geometry[1][2];
+    float j  = -this->geometry[1][1];
+    float i  = this->geometry[1][2];
     float k  =  cos(R[2]);
     float l  =  sin(R[2]);
     float m  = this->geometry[2][0];
-    float n  = this->geometry[2][1];
-    float o  = this->geometry[2][2];
+    float o  = -this->geometry[2][1];
+    float n  = this->geometry[2][2];
 
 
-    J[2][0] = ta * tc + tb * e + ta * f * h - ta * g * i + tb * j;
-    J[2][1] = d + g * h + f * i;
-    J[2][2] = -tb * tc + ta * e - tb * f * h + tb * g * i + ta * j;
+    J[2][0] = ta * tc + tb * e + ta * f * h - ta * -g * i + tb * j;
+    J[2][1] = -(-tb * tc + ta * e - tb * f * h + tb * -g * i + ta * j);
+    J[2][2] = d + -g * h + f * i;
 
 
     // ---- J3 ----
     // # A0 A1 A2
 
 
-    J[3][0] = ta * tc + tb * e + ta * f * h - ta * g * i + tb * j + ta * f * k * m - ta * g * l * m - ta * g * k * n - ta * f * l * n + tb *
-              o;
-    J[3][1] = d + g * h + f * i + g * k * m + f * l * m + f * k * n - g * l * n;
-    J[3][2] = -tb * tc + ta * e - tb * f * h + tb * g * i + ta * j - tb * f * k * m + tb * g * l * m + tb * g * k * n + tb * f * l * n +
-              ta *
-              o;
+    J[3][0] = J[2][0] + ta * f * k * m - ta * -g * -l * m - ta * -g * k * n - ta * f * -l * n + tb * o;
+    J[3][1] = J[2][1] - (-tb * f * k * m + tb * -g * -l * m + tb * -g * k * n + tb * f * -l * n + ta * o);
+    J[3][2] = J[2][2] + -g * k * m + f * -l * m + f * k * n + g * -l * n;
 
 
     // ---- J4J3 J4J5 ----
@@ -250,15 +233,26 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     this->cross(J4J5_vector, J4J3_vector, J4J5_J4J3_normal_vector);
 
 
-    float XZ_parallel_aligned_vector[3] = { float(10.0 *  cos(R[0] +  PI / 2)),
-                                            0.0,
-                                            float(-10.0 *  sin(R[0] +  PI / 2)) };
+    float XY_parallel_aligned_vector[3] = { float(10.0 *  cos(R[0] +  PI / 2.0)),
+                                            float(10.0 *  sin(R[0] +  PI / 2.0)),
+                                            0.0 };
+
+    // static configuration
+    float z_vector[3] = { 0, 0, 1 };
+    float cross_result[3];
+    this->cross(XY_parallel_aligned_vector, z_vector, cross_result);
+
+    if (fabs(this->angleBetween(J4J5_J4J3_normal_vector, XY_parallel_aligned_vector, cross_result)) - PI / 2.0 >= 0.0001) {
+        J4J5_J4J3_normal_vector[0] *= -1.0;
+        J4J5_J4J3_normal_vector[1] *= -1.0;
+        J4J5_J4J3_normal_vector[2] *= -1.0;
+    }
 
     float reference[3];
-    this->cross(XZ_parallel_aligned_vector, J4J3_vector, reference);
+    this->cross(XY_parallel_aligned_vector, J4J3_vector, reference);
 
     // todo dont use coordinate aligned angle - may result in turns when y < 0 -> axis 4 goes outwards
-    R[3] = this->angleBetween(J4J5_J4J3_normal_vector, XZ_parallel_aligned_vector, reference);
+    R[3] = this->angleBetween(J4J5_J4J3_normal_vector, XY_parallel_aligned_vector, reference);
 
 
     // ---- A4 ----
@@ -267,75 +261,26 @@ int Kinematic::inverse(float x, float y, float z, float a, float b, float c, flo
     float reference_vector[3];
     this->cross(J4J3_vector, J4J5_J4J3_normal_vector, reference_vector);
 
-    R[4] += this->angleBetween(J4J5_vector, J4J3_vector, reference_vector);
+    R[4] -= this->angleBetween(J4J5_vector, J4J3_vector, reference_vector);
+    R[4]  = fmod((3 / 2 * PI + R[4]), (2 * PI)) - 3 / 2 * PI; // clamp angle
 
-    // static configuration
-    // if (R[3] > PI / 2) {
-    //     R[3] -= PI;
-    //
-    //     if (R[4] > PI / 2) {
-    //         // R[4] = R[4] + PI
-    //         R[4] = PI / 2 - (R[4] - PI / 2);
-    //     } else {
-    //         // R[4] -R[4] + PI
-    //         R[4] = PI / 2 + (PI / 2 - R[4]);
-    //     }
-    // } else if (R[3] < -PI / 2) {
-    //     R[3] += PI;
-    //
-    //     if (R[4] > PI / 2) {
-    //         R[4] = PI / 2 - (R[4] - PI / 2);
-    //     } else {
-    //         R[4] = PI / 2 + (PI / 2 - R[4]);
-    //     }
-    // }
-    //
-    if (R[3] > PI / 2.0) {
-        R[3] -= PI;
-        R[5] -= PI;
-
-        if (R[4] > PI / 2.0) {
-            // R[4] = R[4] + PI
-            R[4] = PI / 2.0 - (R[4] - PI / 2.0);
-        } else {
-            // R[4] -R[4] + PI
-            R[4] = PI / 2.0 + (PI / 2.0 - R[4]);
-        }
-    } else if (R[3] < -PI / 2.0) {
-        R[3] += PI;
-        R[5] += PI;
-
-        if (R[4] > PI / 2.0) {
-            R[4] = PI / 2.0 - (R[4] - PI / 2.0);
-        } else {
-            R[4] = PI / 2.0 + (PI / 2.0 - R[4]);
-        }
-    }
-
-    R[5] = fmod((-PI + (fmod((R[5] + PI), (2 * PI)))), (2 * PI));
 
     // ---- A5 ----
 
+
     float targetVectorY[3] = {
-        sa *sb *cc - sc * ca,
-        sa * sb * sc + cc * ca,
-        sa * cb,
+        -cb * sc,
+        ca * cc - sa * sb * sc,
+        sa * cc + ca * sb * sc,
     };
 
-    float cross_targetVectorX_targetVectorY[3];
-    this->cross(targetVectorX, targetVectorY, cross_targetVectorX_targetVectorY);
 
-    // float cross_targetVectorY_targetVectorX[3];
-    // this->cross(targetVectorY, targetVectorX, cross_targetVectorY_targetVectorX);
-
-    // R[5] += PI / 2;
-    // R[5] -= this->angleBetween(J4J5_J4J3_normal_vector, targetVectorY, cross_targetVectorY_targetVectorX);
-
-    R[5] += PI / 2.0;
-    R[5] -= this->angleBetween(J4J5_J4J3_normal_vector, targetVectorY, cross_targetVectorX_targetVectorY);
+    float cross_targetVectorZ_targetVectorY[3];
+    this->cross(targetVectorZ, targetVectorY, cross_targetVectorZ_targetVectorY);
+    R[5] -= this->angleBetween(J4J5_J4J3_normal_vector, targetVectorY, cross_targetVectorZ_targetVectorY);
 
     if (R[5] > PI) {
-        R[5] = -PI + (fmod(R[5], PI));
+        R[5] = -PI + fmod(R[5], PI);
     }
 
     bool error = false;
@@ -407,11 +352,6 @@ void Kinematic::forward(float A0, float A1, float A2, float A3, float A4, float 
 }
 
 void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, float R4, float R5, float jointsResult[7][3]) {
-    // if (this->robotType == ROBOT_TYPE::AXIS4) {
-    //     R3 = 0;
-    //     R4 = -(R1 + R2);
-    // }
-
     float a = cos(R0);
     float b = sin(R0);
     float c = this->geometry[0][0];
@@ -437,107 +377,85 @@ void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, flo
     float w = this->geometry[4][0];
     float x = this->geometry[4][1];
     float y = this->geometry[4][2];
-    float A = cos(R5 - PI);
-    float B = sin(R5 - PI);
-
-
-    // float C = 0 // this->geometry[5][0]
-    // float D = 0 // this->geometry[5][1]
-    // float E = 0 // this->geometry[5][2]
+    float A = cos(R5);
+    float B = sin(R5);
 
     jointsResult[0][0] = 0;
     jointsResult[0][1] = 0;
     jointsResult[0][2] = 0;
 
-    jointsResult[1][0] = jointsResult[0][0] + a * c + b * e;
-    jointsResult[1][1] = jointsResult[0][1] + d;
-    jointsResult[1][2] = jointsResult[0][2] + -b * c + a * e;
+    jointsResult[1][0] = jointsResult[0][0] + a * c - b * d;
+    jointsResult[1][1] = jointsResult[0][1] + b * c + a * d;
+    jointsResult[1][2] = jointsResult[0][2] + e;
 
-    jointsResult[2][0] = jointsResult[1][0] + a * f * h - a * g * i + b * j;
-    jointsResult[2][1] = jointsResult[1][1] + g * h + f * i;
-    jointsResult[2][2] = jointsResult[1][2] - b * f * h + b * g * i + a * j;
+    jointsResult[2][0] = jointsResult[1][0] + a * f * h - b * i + a * g * j;
+    jointsResult[2][1] = jointsResult[1][1] + b * f * h + a * i + b * g * j;
+    jointsResult[2][2] = jointsResult[1][2] + -g * h + f * j;
 
-    jointsResult[3][0] = jointsResult[2][0] + a * f * k * m - a * g * l * m - a * g * k * n - a * f * l * n + b * o;
-    jointsResult[3][1] = jointsResult[2][1] + g * k * m + f * l * m + f * k * n - g * l * n;
-    jointsResult[3][2] = jointsResult[2][2] - b * f * k * m + b * g * l * m + b * g * k * n + b * f * l * n + a * o;
+    jointsResult[3][0] = jointsResult[2][0] + a * f * k * m - a * g * l * m - b * n + a * g * k * o + a * f * l * o;
+    jointsResult[3][1] = jointsResult[2][1] + b * f * k * m - b * g * l * m + a * n + b * g * k * o + b * f * l * o;
+    jointsResult[3][2] = jointsResult[2][2] - g * k * m - f * l * m + f * k * o - g * l * o;
 
-    jointsResult[4][0] = jointsResult[3][0] + a * f * k * r - a * g * l * r - a * g * k * p * s - a * f * l * p * s + b * q * s + b * p *
-                         t + a * g * k * q * t + a * f * l * q * t;
-    jointsResult[4][1] = jointsResult[3][1] + g * k * r + f * l * r + f * k * p * s - g * l * p * s - f * k * q * t + g * l * q * t;
-    jointsResult[4][2] = jointsResult[3][2] - b * f * k * r + b * g * l * r + b * g * k * p * s + b * f * l * p * s + a * q * s + a * p *
-                         t - b * g * k * q * t - b * f * l * q * t;
+    jointsResult[4][0] = jointsResult[3][0] + a * f * k * r - a * g * l * r - b * p * s + a * g * k * q * s + a * f * l * q * s + a * g *
+                         k * p * t + a * f * l * p * t + b * q * t;
+    jointsResult[4][1] = jointsResult[3][1] + b * f * k * r - b * g * l * r + a * p * s + b * g * k * q * s + b * f * l * q * s + b * g *
+                         k * p * t + b * f * l * p * t - a * q * t;
+    jointsResult[4][2] = jointsResult[3][2] - g * k * r - f * l * r + f * k * q * s - g * l * q * s + f * k * p * t - g * l * p * t;
 
-    jointsResult[5][0] = jointsResult[4][0] + a * f * k * u * w - a * g * l * u * w - a * g * k * p * v * w - a * f * l * p * v * w + b *
-                         q * v * w - a * g * k * p * u * x - a * f * l * p * u * x + b * q * u * x - a * f * k * v * x + a * g * l * v * x +
-                         b * p * y + a * g *
-                         k * q * y + a * f * l * q * y;
-    jointsResult[5][1] = jointsResult[4][1] + g * k * u * w + f * l * u * w + f * k * p * v * w - g * l * p * v * w + f * k * p * u * x -
-                         g * l * p * u * x - g * k * v * x - f * l * v * x - f * k * q * y + g * l * q * y;
-    jointsResult[5][2] = jointsResult[4][2] - b * f * k * u * w + b * g * l * u * w + b * g * k * p * v * w + b * f * l * p * v * w + a *
-                         q * v * w + b * g * k * p * u * x + b * f * l * p * u * x + a * q * u * x + b * f * k * v * x - b * g * l * v * x +
-                         a * p * y - b * g *
-                         k * q * y - b * f * l * q * y;
+    jointsResult[5][0] = jointsResult[4][0] + a * f * k * u * w - a * g * l * u * w - a * g * k * p * v * w - a * f * l * p * v * w - b *
+                         q * v * w - b * p * x + a * g * k * q * x + a * f * l * q * x + a * g * k * p * u * y + a * f * l * p * u * y + b *
+                         q * u * y + a * f *
+                         k * v * y - a * g * l * v * y;
+    jointsResult[5][1] = jointsResult[4][1] + b * f * k * u * w - b * g * l * u * w - b * g * k * p * v * w - b * f * l * p * v * w + a *
+                         q * v * w + a * p * x + b * g * k * q * x + b * f * l * q * x + b * g * k * p * u * y + b * f * l * p * u * y - a *
+                         q * u * y + b * f *
+                         k * v * y - b * g * l * v * y;
+    jointsResult[5][2] = jointsResult[4][2] - g * k * u * w - f * l * u * w - f * k * p * v * w + g * l * p * v * w + f * k * q * x - g *
+                         l * q * x + f * k * p * u * y - g * l * p * u * y - g * k * v * y - f * l * v * y;
 
     float M[3][3] = {
-        { a *g *k *p *u + a *f *l *p *u - b *q *u + a *f *k *v - a *g *l *v,
-          +B *b *p - B *a *g *k *q + B *a *f *l *q + A *a *f *k *u - A *a *g *l *u - A *a *g *k *p *v - A *a *f *l *p *v + A *b *q *v,
-          A *b *p + A *a *g *k *q + A *a *f *l *q - B *a *f *k *u + B *a *g *l *u + B *a *g *k *p *v + B *a *f *l *p *v -
-          B *b *q *v                                                                                                                                                                                                                                                  },
-        {                             -f * k * p * u + g * l * p * u + g * k * v + f * l * v,
-                                      B * f * k * q + B * g * l * q + A * g * k * u + A * f * l * u + A * f * k * p * v - A * g * l * p * v,
-                                      -A * f * k * q + A * g * l * q - B * g * k * u - B * f * l * u - B * f * k * p * v + B * g * l * p *
-                                      v },
-        { -b * g * k * p * u - b * f * l * p * u - a * q * u - b * f * k * v + b * g * l * v,
-          +B * a * p - B * b * g * k * q - B * b * f * l * q - A * b * f * k * u + A * b * g * l * u + A * b * g * k * p * v + A * b * f *
-          l * p * v + A * a * q * v,
-          A * a * p - A * b * g * k * q - A * b * f * l * q + B * b * f * k * u - B * b * g * l * u - B * b * g * k * p * v - B * b * f *
-          l * p * v - B * a * q *
-          v                                                                                                                                                                                                                                                                                                                           },
+        { -B * b * p - -B * a * g * k * q - -B * a * f * l * q - A * a * f * k * u + A * a * g * l * u + A * a * g * k * p * v + A * a * f *
+          l * p * v + A * b * q * v,
+          -A * b * p + A * a * g * k * q + A * a * f * l * q - -B * a * f * k * u + -B * a * g * l * u + -B * a * g * k * p * v + -B * a *
+          f * l * p * v + -B * b * q * v,
+          -a * g * k * p * u - a * f * l * p * u - b * q * u - a * f * k * v + a * g * l * v },
+        { +B * a * p - -B * b * g * k * q - -B * b * f * l * q - A * b * f * k * u + A * b * g * l * u + A * b * g * k * p * v + A * b * f *
+          l * p * v - A * a * q * v,
+          A * a * p + A * b * g * k * q + A * b * f * l * q - -B * b * f * k * u + -B * b * g * l * u + -B * b * g * k * p * v + -B * b *
+          f * l * p * v - -B * a * q * v,
+          -b * g * k * p * u - b * f * l * p * u + a * q * u - b * f * k * v + b * g * l * v },
+        { +B * f * k * q + -B * g * l * q + A * g * k * u + A * f * l * u + A * f * k *
+          p * v - A * g * l * p * v,
+          A * f * k * q - A * g * l * q + -B * g * k * u + -B * f * l * u + -B * f *
+          k * p * v - -B * g * l * p * v,
+          -f * k * p * u + g * l * p * u + g * k * v + f * l * v },
     };
 
-    // float M[3][3] = {
-    //     { a *g *k *p *u + a *f *l *p *u - b *q *u + a *f *k *v - a *g *l *v,
-    //       -B *b *p - B *a *g *k *q - B *a *f *l *q + A *a *f *k *u - A *a *g *l *u - A *a *g *k *p *v - A *a *f *l *p *v + A *b *q *v,
-    //       A *b *p + A *a *g *k *q + A *a *f *l *q + B *a *f *k *u - B *a *g *l *u - B *a *g *k *p *v - B *a *f *l *p *v + B *b *q *v },
-    //     {                             -f * k * p * u + g * l * p * u + g * k * v + f * l * v,
-    //                                   B * f * k * q - B * g * l * q + A * g * k * u + A * f * l * u + A * f * k * p * v - A * g * l * p *
-    // v,
-    //                                   -A * f * k * q + A * g * l * q + B * g * k * u + B * f * l * u + B * f * k * p * v - B * g * l * p
-    // *
-    //                                   v },
-    //     { -b * g * k * p * u - b * f * l * p * u - a * q * u - b * f * k * v + b * g * l * v,
-    //       -B * a * p + B * b * g * k * q + B * b * f * l * q - A * b * f * k * u + A * b * g * l * u + A * b * g * k * p * v + A * b * f
-    // *
-    //       l * p * v + A * a * q * v,
-    //       A * a * p - A * b * g * k * q - A * b * f * l * q - B * b * f * k * u + B * b * g * l * u + B * b * g * k * p * v + B * b * f *
-    //       l * p * v + B * a * q * v },
-    // };
+    // https://www.geometrictools.com/Documentation/EulerAngles.pdf
+    float thetaY;
+    float thetaX;
+    float thetaZ;
 
-    // http://www.staff.city.ac.uk/~sbbh653/publications/euler.pdf
-
-    float theta = 0;
-    float psi   = 0;
-    float phi   = 0;
-
-    if ((M[2][0] !=  1) || (M[2][0] !=  -1)) {
-        theta = PI + asin(M[2][0]);
-        psi   = atan2(M[2][1] / cos(theta), M[2][2] / cos(theta));
-        phi   = atan2(M[1][0] / cos(theta), M[0][0] / cos(theta));
-    } else {
-        phi = 0; // anything; can set to
-
-        if (M[2][0] ==  -1) {
-            theta = PI / 2;
-            psi   = phi + atan2(M[0][1], M[0][2]);
+    if (M[0][2] < 1) {
+        if (M[0][2] > -1) {
+            thetaY = asin(M[0][2]);
+            thetaX = atan2(-M[1][2], M[2][2]);
+            thetaZ = atan2(-M[0][1], M[0][0]);
         } else {
-            theta = -PI / 2;
-            psi   = -phi + atan2(-M[0][1], -M[0][2]);
+            thetaY = -PI / 2;
+            thetaX = -atan2(M[1][0], M[1][1]);
+            thetaZ = 0;
         }
+    } else {
+        thetaY = +PI / 2;
+        thetaX = atan2(M[1][0], M[1][1]);
+        thetaZ = 0;
     }
 
-    jointsResult[6][0] = psi;
-    jointsResult[6][1] = theta;
-    jointsResult[6][2] = phi;
+
+    jointsResult[6][0] = thetaX;
+    jointsResult[6][1] = thetaY;
+    jointsResult[6][2] = thetaZ;
 
     if (this->debug) {
         log("+++++++++forward KINEMATICS++++++++++");

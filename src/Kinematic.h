@@ -53,7 +53,7 @@ private:
 
 
     bool debug;
-    float V1_length_x_y;
+    float V1_length_x_z;
     float V4_length_x_y_z;
     float geometry[5][3];
     float J_initial_absolute[5][3];
