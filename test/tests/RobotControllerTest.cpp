@@ -62,7 +62,7 @@ protected:
     //         float        maxRadAngle,
     //         float        homeRadAngle = 0);
     MyServo *servos[6];
-    mock_MyServo mock_servos[6] {
+    mock_MyServo mock_servos[6] = {
         { 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
         { 2, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
         { 3, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
