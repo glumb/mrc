@@ -26,8 +26,10 @@
 
 language: cpp
 compiler:
+  - clang
   - gcc
 dist: trusty
+sudo: require
 
 python:
   - "2.7"
@@ -36,6 +38,10 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+    packages:
+      - gcc-6
+      - g++-6
+      - cmake
 
 cache:
     directories:
@@ -45,6 +51,11 @@ install:
     - pip install -U platformio
 
 before_script:
+    - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
+    - sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
+    - export CC=/usr/bin/gcc-6
+    - export CXX=/usr/bin/g++-6
+    - gcc -v && g++ -v && cmake --version
     - cd test
     - cmake .
     - make
