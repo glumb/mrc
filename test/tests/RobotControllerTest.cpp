@@ -54,22 +54,8 @@ protected:
         { -180 * DEG_TO_RAD, 180 * DEG_TO_RAD }
     };
 
-    // MyServo(int          pinNumber,
-    //         float        maxAngleVelocity,
-    //         unsigned int minFreq,
-    //         unsigned int maxFreq,
-    //         float        minRadAngle,
-    //         float        maxRadAngle,
-    //         float        homeRadAngle = 0);
     MyServo *servos[6];
-    mock_MyServo mock_servos[6] = {
-        { 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 2, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 3, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 4, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 5, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 6, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-    };
+    mock_MyServo mock_servos[6];
     Kinematic *K;
     RobotController *R;
 };
@@ -80,12 +66,12 @@ protected:
     virtual void SetUp() {
         K = new Kinematic(geo);
 
-        servos[0] = &Servos[0];
-        servos[1] = &Servos[1];
-        servos[2] = &Servos[2];
-        servos[3] = &Servos[3];
-        servos[4] = &Servos[4];
-        servos[5] = &Servos[5];
+        servos[0] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[1] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[2] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[3] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[4] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[5] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
 
         R = new RobotController(servos, *K, logicalAngleLimits, l2p, p2l);
     }
@@ -121,14 +107,7 @@ protected:
     //         float        maxRadAngle,
     //         float        homeRadAngle = 0);
     MyServo *servos[6];
-    MyServo Servos[6] {
-        { 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 2, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 3, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 4, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 5, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-        { 6, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0 },
-    };
+
     Kinematic *K;
     RobotController *R;
 };

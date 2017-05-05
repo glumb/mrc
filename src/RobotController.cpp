@@ -654,7 +654,6 @@ void RobotController::process() {
             // todo handle singularity
             if (fabs(tmpTargetAngles[4] - (PI / 2.0)) < 0.05) { // axis 5 and 3 in line
                 Serial.println("singularity axis 5,3");
-                std::cout << "SINGULLRLRLRLRLRLTTSTSTYYYY" << '\n';
                 tmpTargetAngles[3] = this->Servos[3]->getCurrentAngle();
                 tmpTargetAngles[5] = this->Servos[5]->getCurrentAngle();
             }

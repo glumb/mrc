@@ -22,9 +22,12 @@ public:
                 maxRadAngle,
                 homeRadAngle) {}
 
+    mock_MyServo() :
+        MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0) {}
+
     MOCK_METHOD1(setTargetRadAngle, void(float radAngle));
     MOCK_METHOD0(getCurrentAngle, float());
-    MOCK_METHOD0(getPinNumber, int());
+    MOCK_METHOD0(getPinNumber,    int());
 };
 
 #endif /* ifndef MOCK_MY_SERVO_H */

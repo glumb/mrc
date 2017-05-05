@@ -101,14 +101,15 @@ void setup()
     Display.show();
     delay(500);
 
-    // Robot Controller
-    RoboCon = new RobotController(servos, *Kin, logicalToPhysicalAngles, physicalToLogicalAngles); // todo make function optional
-
+    // logical angle limits
     for (size_t i = 0; i < 6; i++) {
         logicAngleLimits[i][0] = logicAngleLimits[i][0] / 180 * PI;
         logicAngleLimits[i][1] = logicAngleLimits[i][1] / 180 * PI;
     }
-    RoboCon->setLogicalAngleLimits(logicAngleLimits);
+
+    // Robot Controller
+    RoboCon = new RobotController(servos, *Kin, logicAngleLimits, logicalToPhysicalAngles, physicalToLogicalAngles); // todo make function
+                                                                                                                     // optional
 
     Display.displayText(0, 8 * 2, "Con");
     Display.show();

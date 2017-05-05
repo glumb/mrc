@@ -12,10 +12,10 @@ public:
 
     mock_RobotController(MyServo   *servos[],
                          Kinematic& Kin,
-                         float logicalAngleLimits[6][2],
+                         float      logicalAngleLimits[6][2],
                          void(*_logicalToPhysicalAngles)(float[6]),
-                       void(*_physicalToLogicalAngles)(float[6]))
-        : RobotController(servos, Kin,logicalAngleLimits, _logicalToPhysicalAngles, _physicalToLogicalAngles) {}
+                         void(*_physicalToLogicalAngles)(float[6]))
+        : RobotController(servos, Kin, logicalAngleLimits, _logicalToPhysicalAngles, _physicalToLogicalAngles) {}
 
     MOCK_METHOD2(setTargetPose, void(RobotController::POSITION pos, float value));
     MOCK_METHOD1(getCurrentPose, void(float pose[6]));
@@ -24,7 +24,7 @@ public:
     MOCK_METHOD0(getMaxVelocity, float());
     MOCK_METHOD1(setMovementMethod, void(RobotController::MOVEMENT_METHODS method));
     MOCK_METHOD0(getMovementMethod, RobotController::MOVEMENT_METHODS());
-    MOCK_METHOD1(getCurrentLogicalAngle, float(unsigned int index));
+    MOCK_METHOD1(getCurrentLogicalAngle,  float(unsigned int index));
     MOCK_METHOD1(getCurrentLogicalAngles, void(float angles[6]));
     MOCK_METHOD2(setTargetLogicalAngle, void(unsigned int index, float angle));
 };
