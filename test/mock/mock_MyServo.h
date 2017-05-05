@@ -22,8 +22,6 @@ public:
                 maxRadAngle,
                 homeRadAngle) {}
 
-    ~mock_MyServo() {}
-
     MOCK_METHOD1(setTargetRadAngle, void(float radAngle));
     MOCK_METHOD0(getCurrentAngle, float());
     MOCK_METHOD0(getPinNumber, int());
