@@ -24,7 +24,14 @@ const float servoConfig[6][7] = {
 };
 
 // float geometry[5][3] = { { 4.6, 8, 0 }, { 0, 11.6, 0 }, { 1.5, 2, 0 }, { 11, 0, 0 }, { 0, -3, 0 } };
-float geometry[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
+// float geometry[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
+float geometry[5][3] = {
+    {    5, 0,  7.3 },
+    {    0, 0, 13.0 },
+    {    1, 0,    2 },
+    { 12.6, 0,    0 },
+    {    0, 0, -3.6 }
+};
 
 float logicAngleLimits[6][2] = {
     { servoConfig[0][4],
@@ -42,8 +49,12 @@ float logicAngleLimits[6][2] = {
 };
 
 
-void logicToPhysicalAngles(float angles[6]) {
+void logicalToPhysicalAngles(float angles[6]) {
     angles[2] += angles[1];
+}
+
+void physicalToLogicalAngles(float angles[6]) {
+    angles[2] -= angles[1];
 }
 
 // v7

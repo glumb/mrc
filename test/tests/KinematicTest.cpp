@@ -16,6 +16,32 @@ float geo[5][3] = {
 
 Kinematic Kin(geo);
 
+
+
+void eulerToVectorHelper(float euler[3], float vector[3]) {
+    float cc = cos(euler[2]);
+    float sc = sin(euler[2]);
+    float cb = cos(euler[1]);
+    float sb = sin(euler[1]);
+    float ca = cos(euler[0]);
+    float sa = sin(euler[0]);
+
+    vector[0] = sb;
+    vector[1] = -sa * cb;
+    vector[2] = ca * cb;
+}
+
+void EULER_EQUALS(float euler1[3],float euler2[3]) {
+  float vector1[3];
+  eulerToVectorHelper(euler1,vector1);
+  float vector2[3];
+  eulerToVectorHelper(euler2,vector2);
+
+  EXPECT_NEAR(vector2[0], vector1[0], 1e-5);
+  EXPECT_NEAR(vector2[1], vector1[1], 1e-5);
+  EXPECT_NEAR(vector2[2], vector1[2], 1e-5);
+}
+
 TEST(KinematicTest, forwardHome) {
     float initialAngles[6] = { 0, 0, 0, 0, 0, 0 };
 
@@ -77,10 +103,10 @@ TEST(KinematicTest, forwardEqualsInverseHome) {
 
 TEST(KinematicTest, forwardEqualsInverse) {
     float testPoses[4][6] = {
-        { 10, 10, 10,       0, PI,          0 },
-        { 10, 10, 10,       0, PI,     PI     },
-        { 10, 10, 10, -PI / 2, PI,     PI / 3 },
-        { 10, 10, 10,       0, PI / 2,      0 }
+        { 10, 10, 10,       0, PI,                  0 },
+        { 10, 10, 10,       0, PI,     PI             },
+        { 10, 10, 10, -PI / 2, PI,     PI / 3         },
+        { 10, 10, 10,       0, PI / 2,              0 }
     };
 
     for (size_t i = 0; i < 4; i++) {
@@ -93,6 +119,10 @@ TEST(KinematicTest, forwardEqualsInverse) {
         for (size_t j = 0; j < 3; j++) {
             EXPECT_NEAR(testPoses[i][j], pose[j], 1e-5);
         }
+
+        float testPose[3] = { testPoses[i][3], testPoses[i][4], testPoses[i][5] };
+
+       EULER_EQUALS(pose + 3, testPose);
     }
 }
 }

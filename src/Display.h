@@ -20,6 +20,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "RobotController.h"
+#include "Kinematic.h"
 
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
@@ -69,7 +71,7 @@ public:
     void displayRobot(Kinematic *kin, RobotController *RoboCon, unsigned int x, unsigned int y, float scale, unsigned int position = 0) {
         float jointPositions[7][3] = {0}; // 7 elements - Euler angles ar the last
         float angles[6];
-        RoboCon->getCurrentLogicAngles(angles);
+        RoboCon->getCurrentLogicalAngles(angles);
         kin->calculateCoordinates(angles[0],
                                   angles[1],
                                   angles[2],
@@ -78,7 +80,17 @@ public:
                                   angles[5], jointPositions);
 
         switch (position) {
-        case 0:                                                        // Front
+          case 0:                                                        // Front
+
+          for (size_t i = 0; i < 5; i++) {
+            display.drawLine(x + jointPositions[i][0] * scale * 2, // times two, sonce pixels are not square
+              y + -jointPositions[i][2] * scale,
+              x + jointPositions[i + 1][0] * scale * 2,
+              y + -jointPositions[i + 1][2] * scale,
+              WHITE);
+            }
+            break;
+        case 1:                                                        // Top
 
             for (size_t i = 0; i < 5; i++) {
                 display.drawLine(x + jointPositions[i][0] * scale * 2, // times two, sonce pixels are not square
@@ -89,16 +101,6 @@ public:
             }
             break;
 
-        case 1:                                                        // Top
-
-            for (size_t i = 0; i < 5; i++) {
-                display.drawLine(x + jointPositions[i][0] * scale * 2, // times two, sonce pixels are not square
-                                 y + -jointPositions[i][2] * scale,
-                                 x + jointPositions[i + 1][0] * scale * 2,
-                                 y + -jointPositions[i + 1][2] * scale,
-                                 WHITE);
-            }
-            break;
 
         case 2:                                                        // Side
 

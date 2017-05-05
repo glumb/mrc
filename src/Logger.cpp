@@ -2,12 +2,11 @@
 
 // 0> ONLY TEST 1> ERROR 2> WARNING 3> INFO
 #define LOG_LEVEL 3
+// # define DEBUG 1
 
 #ifndef UNIT_TEST
 
-# define DEBUG 1
 
-#endif // ifndef UNIT_TEST
 
 // #define DEBUG_NAMESPACE "handleSerialCommand"
 // #define DEBUG_NAMESPACE "RobotController"
@@ -19,7 +18,7 @@ unsigned long Logger::usTimeSinceLastCall = micros();
 Logger::Logger(String domain) : domain(domain) {}
 
 void Logger::time(String eventName) {
-  #ifdef DEBUG
+  # ifdef DEBUG
     unsigned long tmpTime       = micros();
     unsigned long timeDiffStart = tmpTime - this->usTime;
     unsigned long timeDiffCall  = tmpTime - this->usTimeSinceLastCall;
@@ -36,49 +35,49 @@ void Logger::time(String eventName) {
     // account for serial out time
     this->usTime             += micros() - tmpTime;
     this->usTimeSinceLastCall = micros();
-  #endif // ifdef DEBUG
+  # endif // ifdef DEBUG
 }
 
 void Logger::resetTime() {
-  #ifdef DEBUG
+  # ifdef DEBUG
     this->usTime              = micros();
     this->usTimeSinceLastCall = micros();
-  #endif // ifdef DEBUG
+  # endif // ifdef DEBUG
 }
 
 void Logger::error(String text, bool test) {
-  #if LOG_LEVEL > 0
+  # if LOG_LEVEL > 0
     this->log(ERROR, text, test);
-  #endif // if LOG_LEVEL > 0
+  # endif // if LOG_LEVEL > 0
 }
 
 void Logger::warning(String text, bool test) {
-  #if LOG_LEVEL > 1
+  # if LOG_LEVEL > 1
     this->log(WARNING, text, test);
-  #endif // if LOG_LEVEL > 1
+  # endif // if LOG_LEVEL > 1
 }
 
 void Logger::info(String text, bool test) {
-  #if LOG_LEVEL > 2
+  # if LOG_LEVEL > 2
     this->log(INFO, text, test);
-  #endif // if LOG_LEVEL > 2
+  # endif // if LOG_LEVEL > 2
 }
 
 void Logger::info(const char *text, bool test) {
-  #if LOG_LEVEL > 2
+  # if LOG_LEVEL > 2
     this->log(INFO, text, test);
-  #endif // if LOG_LEVEL > 2
+  # endif // if LOG_LEVEL > 2
 }
 
 void Logger::log(LOGLEVEL lvl, String text, bool test) {
-  #ifdef DEBUG
+  # ifdef DEBUG
 
 
-    # ifdef DEBUG_NAMESPACE
+    #  ifdef DEBUG_NAMESPACE
 
     if (!this->domain.equals(DEBUG_NAMESPACE)) return;
 
-    # endif // ifdef NAMESPACE
+    #  endif // ifdef NAMESPACE
 
     switch (lvl) {
     case ERROR:
@@ -108,17 +107,17 @@ void Logger::log(LOGLEVEL lvl, String text, bool test) {
 
     delay(20);
 
-  #endif // ifdef (DEBUG)
+  # endif // ifdef (DEBUG)
 }
 
 void Logger::log(LOGLEVEL lvl,  const char *text, bool test) {
-  #ifdef DEBUG
+  # ifdef DEBUG
 
-    # ifdef DEBUG_NAMESPACE
+    #  ifdef DEBUG_NAMESPACE
 
     if (!this->domain.equals(DEBUG_NAMESPACE)) return;
 
-    # endif // ifdef NAMESPACE
+    #  endif // ifdef NAMESPACE
 
     switch (lvl) {
     case ERROR:
@@ -169,5 +168,45 @@ void Logger::log(LOGLEVEL lvl,  const char *text, bool test) {
 
     delay(20);
 
-   #endif // ifdef (DEBUG)
+   # endif // ifdef (DEBUG)
 }
+
+#else // ifndef UNIT_TEST
+
+
+unsigned long Logger::usTime              = micros();
+unsigned long Logger::usTimeSinceLastCall = micros();
+
+Logger::Logger(String domain) : domain(domain) {}
+
+void Logger::time(String eventName) {}
+
+void Logger::resetTime()            {}
+
+void Logger::error(String text, bool test) {
+    this->log(LOGLEVEL::ERROR, text);
+}
+
+void Logger::warning(String text, bool test) {
+    this->log(LOGLEVEL::ERROR, text);
+}
+
+void Logger::info(String text, bool test) {
+    this->log(LOGLEVEL::ERROR, text);
+}
+
+void Logger::info(const char *text, bool test) {
+    this->log(LOGLEVEL::ERROR, String(text));
+}
+
+void Logger::log(LOGLEVEL lvl, String text, bool test) {
+  # ifdef DEBUG
+    std::cout << text << '\n';
+  # endif // ifdef DEBUG
+}
+
+void Logger::log(LOGLEVEL lvl,  const char *text, bool test) {
+    this->log(lvl, String(text));
+}
+
+#endif // ifndef UNIT_TEST

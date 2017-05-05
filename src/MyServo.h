@@ -1,6 +1,10 @@
 #ifndef MY_SERVO_H
 #define MY_SERVO_H 1
 
+#ifndef MOCK_VIRTUAL // used for setting methods to virtual in test environment
+# define MOCK_VIRTUAL
+#endif // ifndef MOCK_VIRTUAL
+
 #include <Arduino.h>
 #include <Servo.h>
 
@@ -18,38 +22,38 @@ public:
             float        maxRadAngle,
             float        homeRadAngle = 0);
 
-    int          getPinNumber();
+    MOCK_VIRTUAL int          getPinNumber();
 
-    void         setAngleLimits(float minRadAngle,
-                                float maxRadAngle);
-    float        getMinRadAngle();
-    float        getMaxRadAngle();
+    MOCK_VIRTUAL void         setAngleLimits(float minRadAngle,
+                                             float maxRadAngle);
+    MOCK_VIRTUAL float        getMinRadAngle();
+    MOCK_VIRTUAL float        getMaxRadAngle();
 
-    void         setCalibrationFreq(unsigned int minFreq,
-                                    unsigned int maxFreq);
+    MOCK_VIRTUAL void         setCalibrationFreq(unsigned int minFreq,
+                                                 unsigned int maxFreq);
 
-    float        getCurrentAngle();
+    MOCK_VIRTUAL float        getCurrentAngle();
 
-    void         setTargetRadAngle(float angleRad);
-    float        getTargetRadAngle();
+    MOCK_VIRTUAL void         setTargetRadAngle(float angleRad);
+    MOCK_VIRTUAL float        getTargetRadAngle();
 
-    void         setCurrentAngleVelocity(float angleRadVelocity);
-    float        getCurrentAngleVelocity();
+    MOCK_VIRTUAL void         setCurrentAngleVelocity(float angleRadVelocity);
+    MOCK_VIRTUAL float        getCurrentAngleVelocity();
 
-    unsigned int getMinFreq();
-    unsigned int getMaxFreq();
+    MOCK_VIRTUAL unsigned int getMinFreq();
+    MOCK_VIRTUAL unsigned int getMaxFreq();
 
-    void         setFreqency(long microseconds);
+    MOCK_VIRTUAL void         setFreqency(long microseconds);
 
-    float        getMaxAngleVelocity();
+    MOCK_VIRTUAL float        getMaxAngleVelocity();
 
-    bool         getOutOfRange();
+    MOCK_VIRTUAL bool         getOutOfRange();
 
-    bool         atTargetAngle();
+    MOCK_VIRTUAL bool         atTargetAngle();
 
-    void         process(unsigned int deltaT = DELTA_T);
+    MOCK_VIRTUAL void         process(unsigned int deltaT = DELTA_T);
 
-    float        getHomeRadAngle();
+    MOCK_VIRTUAL float        getHomeRadAngle();
 
 private:
 
@@ -89,7 +93,3 @@ private:
                            float out_max);
 };
 #endif /* ifndef MY_SERVO_H */
-
-/*MyServo::MyServo(unsigned int pinNumber, float maxAngleVelocity)
-    : servoLib(numba1 + numba2), thingTwo(numba1, numba2) {}
- */

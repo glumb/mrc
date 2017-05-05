@@ -1,222 +1,259 @@
+#include "config.h"
 #include <Arduino.h>
-#include "SerialIO.h"
-#include "WaitController.h"
-#include "EEPromStorage.h"
-#include "MRCPParser.h"
-#include "RingBuffer.h"
-#include "MRILParser.h"
 #include "MyServo.h"
+#include "TimerOne.h"
 #include "Kinematic.h"
-#include "RobotController.h"
+#include "Logger.h"
 #include "Display.h"
+
+#include "MRILParser.h"
+#include "RobotController.h"
 #include "IOLogic.h"
 #include "AdditionalAxisController.h"
 #include "WaitController.h"
 
-void receiveCallback(char c) {
-    IO.transmit(c);
+#include "MRCPParser.h"
+#include "EEPromStorage.h"
+#include "RingBuffer.h"
+#include "MRCPR.h"
+
+#include "SerialIO.h"
+
+// ---- I2C do not change! ----
+#define pin_sda   18
+#define pin_scl  19 // SCK
+#define pin_latch  17
+
+#define RINGBUFFER_SIZE 300
+
+void updateServos();
+void onIncomingData(char c);
+
+MyServo   *servos[8];
+Kinematic *Kin;
+Display    Display;
+
+MRILParser *Mrilparser;
+RobotController *RoboCon;
+IOLogic IOLogic;
+AdditionalAxisController *AxisController;
+WaitController WaitController;
+
+SerialIO Serialio;
+
+MRCPR Mrcpr(Serialio);
+
+MRCPParser   *Mrcpparser;
+EEPromStorage Eepromstorage;
+RingBuffer    Ringbuffer(RINGBUFFER_SIZE);
+
+#define SERVOMIN  200  // usually 1000us
+#define SERVOMAX  2800 // usually 2000us
+
+#define updateServosEveryMs 15
+
+namespace {
+Logger logger("main");
 }
-
-void TEST_SERIALIO() {
-    Serial.println("SERIALIO Expect:");
-    Serial.println("112233");
-    IO.onData(receiveCallback);
-
-    IO.transmit('1');
-    IO.transmit('1');
-    IO.transmit("22");
-    char s[2] = { '3', '3' };
-    IO.transmit(s);
-    Serial.println("");
-    IO.process();
-}
-
-void TEST_WAITCONTROLLER() {
-    Serial.println("WAITCONTROLLER:");
-    Serial.println("okok");
-    WaitController W;
-    W.waitMs(500);
-
-    if (!W.isDone()) {
-        Serial.print("ok");
-    }
-    delay(501);
-
-    if (W.isDone()) {
-        Serial.println("ok");
-    }
-}
-
-void TEST_EEPROMSTORAGE() {
-    Serial.println("EEPROMSTORAGE:");
-    Serial.println("okokok");
-    EEPromStorage E;
-    E.clear();
-    char m[4] = { '1', '2', '3', '4' };
-    E.appendMessage(m, 4);
-    char m2[4] = { 'a', 'b', 'c', 'd' };
-    E.appendMessage(m2, 4);
-
-    char message[10];
-   E.getMessage(0, message);
-
-    if (message[1] == m[1]) {
-        Serial.print("ok");
-    } else {
-        Serial.print(message[1]);
-    }
-
-    if (message[3] == m[3]) {
-        Serial.print("ok");
-    } else {
-        Serial.print(message[3]);
-    }
-    E.getMessage(1, message);
-
-    if (message[3] == m2[3]) {
-        Serial.println("ok");
-    } else {
-        Serial.print(message[3]);
-    }
-    delay(10);
-}
-
-void TEST_RINGBUFFER() {
-    Serial.println("RINGBUFFER:");
-    Serial.println("okok");
-    RingBuffer Rb(10);
-
-    Rb.clear();
-     char bytes[3] = { '1', '2', '3' };
-
-    Rb.putBytes(bytes, 3);
-
-    char returnedMessage[10];
-    unsigned int length = Rb.getMessage(returnedMessage);
-
-    if (length == 3) {
-        Serial.println("ok");
-    }
-
-    if (returnedMessage[1] == bytes[1]) {
-        Serial.println("ok");
-    }
-}
-
-void l2f(float servo[]) {}
-
-void TEST_MRILPARSER() {
-    Serial.println("MRILPARSER:");
-    Serial.println("okokok");
-
-    MyServo *servos[6];
-    servos[0] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-    servos[1] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-    servos[2] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-    servos[3] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-    servos[4] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-    servos[5] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-
-    float geo[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
-    Kinematic K(geo);
-
-    RobotController R(servos, &K, l2f);
-    IOLogic IO;
-    AdditionalAxisController A(servos);
-    WaitController  W;
-    MRCPR Mrcpr;
-
-    MRILParser MRIL(R,IO,A,W,Mrcpr);
-
-    char mri[] = {'W','3','0'};
-    MRIL.parse(mri,3);
-    if (!W.isDone()) {
-        Serial.print("ok");
-    }
-    delay(350);
-
-    if (W.isDone()) {
-        Serial.println("ok");
-    }
-}
-//
-// void TEST_MRILPARSER() {
-//     Serial.println("MRILPARSER:");
-//     Serial.println("okokok");
-//
-//     MyServo *servos[2];
-//     servos[0] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     servos[1] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     Kinematic *K;
-//     float geo[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
-//     K = new Kinematic(geo);
-//     IOLogic IO();
-//     AdditionalAxisController A(servos);
-//     WaitController  W();
-//     RobotController R(servos, K, l2f);
-//     MRCPR Mrcpr();
-//     EEPromStorage E();
-//
-//     MRILParser MRIL(&R,IO,&A,W,Mrcpr);
-//     MRCPParser M(E, R, MRIL);
-//
-//
-//
-// }
-
-// void TEST_MRCPPARSER() {
-//     Serial.println("MRCPPARSER:");
-//     Serial.println("okokok");
-//     EEPromStorage E;
-//     RingBuffer R(10);
-//     MRILParser(RobotController          *rc,
-//                IOLogic                   _IOLogic,
-//                AdditionalAxisController *AxisCon,
-//                WaitController            WaitCon,
-//                MRCPR                     _MRCPR)
-//     MRCPParser M(E , R , M );
-//
-//
-//     char message[10];
-//     char length = E.getMessage(0, message);
-//
-//     if (message[1] == m[1]) {
-//         Serial.print("ok");
-//     } else {
-//         Serial.print(message[1]);
-//     }
-//
-//     if (message[3] == m[3]) {
-//         Serial.print("ok");
-//     } else {
-//         Serial.print(message[3]);
-//     }
-//     E.getMessage(1, message);
-//
-//     if (message[4] == m2[4]) {
-//         Serial.println("ok");
-//     } else {
-//         Serial.print(message[4]);
-//     }
-// }
 
 void setup()
 {
-    delay(4000);
+    Serial.begin(9600);
 
-    TEST_SERIALIO();
-    delay(1000);
-    TEST_WAITCONTROLLER();
-    delay(1000);
-    TEST_EEPROMSTORAGE();
-    delay(1000);
-    TEST_MRILPARSER();
-    delay(1000);
-    TEST_RINGBUFFER();
-    delay(1000);
+    // --- show start screen ---
+    Display.begin();
+    Display.clear();
+    Display.displayText(0, 0, "STARTING");
+    Display.displayRobotGeometry(geometry);
+    Display.show();
+    delay(2000);
 
-    // TEST_MRCPPARSER();
+    // --- init servos ---
+
+    for (size_t i = 0; i < 6; i++) {
+        servos[i] = new MyServo(servoConfig[i][0],
+                                servoConfig[i][1] / 180.0 * PI,
+                                servoConfig[i][2],
+                                servoConfig[i][3],
+                                servoConfig[i][4] / 180 * PI,
+                                servoConfig[i][5] / 180 * PI,
+                                servoConfig[i][6] / 180 * PI
+                                );
+
+        // servos[i]->setTargetRadAngle(0);
+    }
+
+    // additional axis
+    for (size_t i = 0; i < 2; i++) {
+        servos[i + 6] = new MyServo(additionalAxisServoConfig[i][0],
+                                    additionalAxisServoConfig[i][1] / 180.0 * PI,
+                                    additionalAxisServoConfig[i][2],
+                                    additionalAxisServoConfig[i][3],
+                                    additionalAxisServoConfig[i][4] / 180 * PI,
+                                    additionalAxisServoConfig[i][5] / 180 * PI
+                                    );
+    }
+
+    // Kinematic
+    Kin = new Kinematic(geometry);
+
+    Display.displayText(0, 8 * 1, "KIN");
+    Display.show();
+    delay(500);
+
+    // Robot Controller
+    RoboCon = new RobotController(servos, *Kin, logicalToPhysicalAngles, physicalToLogicalAngles); // todo make function optional
+
+    for (size_t i = 0; i < 6; i++) {
+        logicAngleLimits[i][0] = logicAngleLimits[i][0] / 180 * PI;
+        logicAngleLimits[i][1] = logicAngleLimits[i][1] / 180 * PI;
+    }
+    RoboCon->setLogicalAngleLimits(logicAngleLimits);
+
+    Display.displayText(0, 8 * 2, "Con");
+    Display.show();
+    delay(500);
+
+    // Additional Axis
+    AxisController = new AdditionalAxisController(servos + 6);
+
+    Display.displayText(0, 8 * 3, "Axis");
+    Display.show();
+    delay(500);
+
+    // MRIL Parser
+    Mrilparser = new MRILParser(*RoboCon,
+                                IOLogic,
+                                *AxisController,
+                                WaitController,
+                                Mrcpr);
+
+    // MRCP Parser
+    Mrcpparser = new MRCPParser(Eepromstorage,
+                                Ringbuffer,
+                                *Mrilparser,
+                                Mrcpr);
+
+    // link MRCP to incoming data
+    Serialio.onData(onIncomingData);
+
+
+    RoboCon->setMovementMethod(RobotController::MOVEMENT_METHODS::LINEAR);
+    RoboCon->setMaxVelocity(10);
+
+    // init Timer and register callback
+    Timer1.initialize(updateServosEveryMs * 1000); // 20ms
+    Timer1.attachInterrupt(updateServos);
 }
 
+void onIncomingData(char c) {
+    Mrcpparser->parseChar(c);
+}
+
+volatile long timer;
+
+void updateServos() {
+    timer = micros();
+
+    for (size_t i = 0; i < 8; i++) {
+        servos[i]->process(updateServosEveryMs);
+    }
+
+    // important: move to loop when debugging (Serial.print needs ISR)
+    // todo use volatile and ATOMIC on angle buffer and stuff
+    RoboCon->process();
+
+    timer = micros() - timer;
+}
+
+void renderDisplay();
+
+
 void loop()
-{}
+{
+    static unsigned int displayCounter = 0;
+
+    logger.resetTime();
+
+    // logger.time("before process");
+    //
+    // logger.time("after process");
+
+    if (displayCounter++ >= 10000) {
+        renderDisplay();
+        displayCounter = 0;
+
+        // Serial.println(timer);
+    }
+
+    // logger.time("after Display");
+    Serialio.process();
+    Mrcpparser->process();
+
+    for (size_t i = 0; i < 8; i++) {
+        if (servos[i]->getOutOfRange()) {
+            logger.warning("out of frequency range. servo i: " + String(i) + " minAngle: "  + String(
+                               servos[i]->getMinRadAngle() / PI * 180) + " maxAngle: " + String(
+                               servos[i]->getMaxRadAngle() / PI * 180) +  " target angle: " +
+                           String(servos[i]->getTargetRadAngle() / PI * 180));
+        }
+    }
+}
+
+void renderDisplay() {
+    Display.clear();
+    Display.displayRobot(Kin, RoboCon, 10, 20, 0.5, 1);
+    Display.displayRobot(Kin, RoboCon, 35, 28, 0.5, 0);
+
+
+    // Display.displayBars(64, 8, 64, 6 * 4, servos);
+    String firstLine;
+
+    switch (RoboCon->getMovementMethod()) {
+    case RobotController::MOVEMENT_METHODS::P2P:
+        firstLine += "M00";
+        break;
+
+    case RobotController::MOVEMENT_METHODS::LINEAR:
+        firstLine += "M01";
+        break;
+
+    case RobotController::MOVEMENT_METHODS::CIRCULAR:
+        firstLine += "M02";
+        break;
+    }
+    firstLine += " V " + String(RoboCon->getMaxVelocity());
+    Display.displayText(0,      0, firstLine);
+    Display.displayText(13 * 6, 0, "B " + String(Ringbuffer.getSize()) + "/" + String(Ringbuffer.getCapacity()));
+    Display.displayBars(64, 8, 64, 6 * 3, servos);
+
+    if (IOLogic.isDone()) {
+        Display.displayText(0, 8, "done");
+    } else {
+        Display.displayText(0, 8, "n done");
+    }
+
+    // --- show IO ---
+    if (true || !IOLogic.isDone()) {
+        unsigned int x = 70;
+        unsigned int y = 6 * 3 + 10;
+
+        // display target state
+        for (size_t i = 0; i < 10; i++) {
+            switch (IOLogic.getTargetState(i)) {
+            case IOLogic::IO_LOW:
+                display.drawRect(x + 6 * i, y, 4, 3, WHITE);
+                break;
+
+            case IOLogic::IO_HIGH:
+                display.fillRect(x + 6 * i, y, 4, 3, WHITE);
+                break;
+
+            case IOLogic::IO_UNDEFINED:
+                display.drawRect(x + 6 * i, y, 4, 1, WHITE);
+                break;
+            }
+        }
+    }
+    Display.show(); // takes 40 ms!
+}

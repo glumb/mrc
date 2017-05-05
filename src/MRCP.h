@@ -2,9 +2,9 @@
 #define MRCP_H 1
 #include "Arduino.h"
 
-// const  char MRCP_END_FRAME   = '\r';
+const  char MRCP_END_FRAME   = '\r';
 const  char MRCP_START_FRAME = 'S';
-const  char MRCP_END_FRAME   = 'E';
+// const  char MRCP_END_FRAME   = 'E';
 
 const  char MRCP_COMMAND_QUEUE_IN = 'Q';
 const  char MRCP_COMMAND_EXECUTE  = 'E';

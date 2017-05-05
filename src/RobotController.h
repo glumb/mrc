@@ -12,7 +12,11 @@
  */
 
 #ifndef ROBOT_CONTROLLER_H
-# define ROBOT_CONTROLLER_H 1
+# define ROBOT_CONTROLLER_H
+
+#ifndef MOCK_VIRTUAL // used for setting methods to virtual in test environment
+#define MOCK_VIRTUAL
+#endif
 
 #include "MyServo.h"
 #include "Kinematic.h"
@@ -23,74 +27,84 @@ class RobotController {
 public:
 
     RobotController(MyServo   *servos[],
-                    Kinematic *Kin,
-                    void(*logicToPhysicalAngles)(float[6]));
+        Kinematic &_Kinematic,
+        float logicalAngleLimits[6][2],
+        void(*_logicalToPhysicalAngles)(float[6]),
+      void(*_physicalToLogicalAngles)(float[6]));
 
-    enum MOVEMENT_METHODS { LINEAR, P2P, CIRCULAR };
+    enum MOVEMENT_METHODS { LINEAR=1, P2P=0, CIRCULAR=2 };
     enum STATES { IDLE, MOVING, START_MOVE, PREPARE_MOVE };
     enum POSITION { X = 0, Y = 1, Z = 2, A = 3, B = 4, C = 5 };
 
-    void             setLogicAngleLimits(float angleLimitsRad[6][2]);
-
-    void             setMaxVelocity(float velocity);
-    float            getMaxVelocity();
-
-    void             resetPose();
-    void             moveToMinPose();
-    void             moveToMaxPose();
-    void             setMaxAngleVelocity(unsigned int index,
-                                         float        angleVelocity);
-    void             setMaxAngleVelocities(float angleVelocity);
-
-    void             setMovementMethod(MOVEMENT_METHODS method);
-    MOVEMENT_METHODS getMovementMethod();
-
-    void             getTargetPose(float targetPose[6]);
-    float             getTargetPose(POSITION position);
-    void             setTargetPose(float x,
-                                   float y,
-                                   float z,
-                                   float a,
-                                   float b,
-                                   float c);
-    void  setTargetPose(POSITION position,
-                        float    value);
-
-    void  getCurrentLogicAngles(float currentAngles[6]);
-    void  getCurrentLogicAngle(unsigned int index);
-
-    void  getCurrentPhysicalAngles(float angles[6]);
-
-    void  setTargetAngles(float targetAngles[6]);
-    void  setTargetAngle(unsigned int index,
-                         float        targetAngle);
-    void  getTargetAngles(float targetAngles[6]);
-    float getTargetAngle(unsigned int index);
-
-    void  getCurrentPose(float currentPose[6]);
-    float getCurrentPose(POSITION position);
-
-    bool  isMoving();
-    bool  atTargetPose();
-    bool  PoseEquals(float Pose0[6],
-                     float Pose1[6]);
-    void  process();
+    // when calling process in a loop, transaction prevents execution of a half set command
     void  startTransaction();
     void  endTransaction();
 
+    void stop();
+
+    MOCK_VIRTUAL void setMaxVelocity(float velocity);
+    MOCK_VIRTUAL float getMaxVelocity();
+
+    MOCK_VIRTUAL void setMovementMethod(MOVEMENT_METHODS method);
+    MOCK_VIRTUAL MOVEMENT_METHODS getMovementMethod();
+
+    MOCK_VIRTUAL void  getCurrentPose(float currentPose[6]);
+    MOCK_VIRTUAL float getCurrentPose(POSITION position);
+
+    MOCK_VIRTUAL void setTargetPose(float x,
+           float y,
+           float z,
+           float a,
+           float b,
+           float c);
+    MOCK_VIRTUAL void setTargetPose(float pose[6]);
+      MOCK_VIRTUAL void  setTargetPose(POSITION position,
+            float    value);
+         MOCK_VIRTUAL   void getTargetPose(float targetPose[6]);
+         MOCK_VIRTUAL   float getTargetPose(POSITION position);
+
+
+            // Logical
+    MOCK_VIRTUAL void  getCurrentLogicalAngles(float currentAngles[6]);
+    MOCK_VIRTUAL float  getCurrentLogicalAngle(unsigned int index);
+
+    MOCK_VIRTUAL void  setTargetLogicalAngles(float targetAngles[6]); //logical
+    MOCK_VIRTUAL void  setTargetLogicalAngle(unsigned int index,
+             float        targetAngle);
+    MOCK_VIRTUAL void  getTargetLogicalAngles(float targetAngles[6]);
+    MOCK_VIRTUAL float getTargetLogicalAngle(unsigned int index);
+
+      // Physical
+          MOCK_VIRTUAL void  getCurrentPhysicalAngles(float angles[6]);
+          MOCK_VIRTUAL float  getCurrentPhysicalAngle(unsigned int index);
+
+    // void  setTargetPhysicalAngles(float targetAngles[6]); //logical
+    // MOCK_VIRTUAL void  setTargetPhysicalAngle(unsigned int index,
+            //  float        targetAngle);
+    MOCK_VIRTUAL void  getTargetPhysicalAngles(float targetAngles[6]);
+    MOCK_VIRTUAL float getTargetPhysicalAngle(unsigned int index);
+
+    MOCK_VIRTUAL bool  isMoving();
+
+    void  process();
 private:
+  float startAngles[6]     = { 0 };
+  float targetAngles[6]     = { 0 };
+  float targetPose[6]      = { 0 };
+
+  float logicalAngleLimits[6][2];
+
+  bool targetAnglesChanged = false;
+  bool targetPoseChanged = false;
+
 
     float interpolationRotationAngle     = 0.0;
     float rotationAxisVectorNorm[3]      = { 0 };
     float targetOrientationVectorNorm[3] = { 0 };
     float targetOrientationVector[3]     = { 0 };
-    float targetPose[6]                  = { 0 };
-    float targetPoseBuffer[6]            = { 0 };
     float startOrientationVectorNorm[3]  = { 0 };
     float startOrientationVector[3]      = { 0 };
-    float startPose[6]                   = { 0 };
-    float startAngles[6]                 = { 0 };
-    float targetAngleBuffer[6]           = { 0 }; // needed to be able to set angles once at a time
+    float startPose[6]       = { 0 };
 
     bool moveAsFarAsPossibleOnOutOfBound;
     bool inTransaction = false;
@@ -100,31 +114,32 @@ private:
     float interpolationOrientationAngleIncrement;
     float maxVelocity;
 
-    float logicAngleLimits[6][2];
 
-    void (*logicToPhysicalAngles )(float[6]);
-
-    Kinematic *IK;
-
-    MOVEMENT_METHODS movementMethod;
-
+    Kinematic &_Kinematic;
     MyServo *Servos[6];
+    void (*logicalToPhysicalAngles )(float[6]);
+    void (*physicalToLogicalAngles )(float[6]);
 
-    // void (*kinematicCoupling)(float [6]);
+
+    MOVEMENT_METHODS movementMethod = MOVEMENT_METHODS::P2P;
 
     void _setTargetPose(float x,
-                        float y,
-                        float z,
-                        float a,
-                        float b,
-                        float c);
+            float y,
+            float z,
+            float a,
+            float b,
+            float c);
     void _applyTimedTargetAngles(float targetAngles[6],
-                                 float targetTime = 0);
+         float targetTime = 0);
 
     void rodrigues(float ret[3],
-                   float unit[3],
-                   float v[3],
-                   float angleRad);
+       float unit[3],
+       float v[3],
+       float angleRad);
+
+       bool  _poseEquals(float Pose0[6],
+            float Pose1[6]);
+            bool _anglesEqual(float angles1[6], float angles2[6]);
 };
 
 #endif // ifndef ROBOT_CONTROLLER_H

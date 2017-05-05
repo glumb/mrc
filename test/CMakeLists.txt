@@ -6,6 +6,7 @@ enable_language(C)
 enable_language(CXX)
 
 add_definitions(-DUNIT_TEST)
+add_definitions(-DMOCK_VIRTUAL=virtual)
 
 set(CMAKE_CXX_FLAGS "-std=c++11")
 

@@ -98,6 +98,9 @@ unsigned int MyServo::getMaxFreq() {
 float MyServo::getCurrentAngle() { // physical angle
     float result;
 
+    // std::cout << "getCurrentAngle "<<currentAngle << '\n';
+
+    // current angle may change whe process interrupt kicks in
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
         result = this->currentAngle;
@@ -149,7 +152,7 @@ void MyServo::process(unsigned int deltaT) {
     if (fabs(deltaAngle) > fabs(this->targetAngle - this->startAngle)) {
         this->currentAngle = this->targetAngle;
 
-        // set start to target to not move again on elapsed time overflow ~50 days?
+        // set start to target to not move again on elapsed time. overflow ~50 days?
         this->startAngle = this->targetAngle;
     } else {
         if (this->targetAngle > this->startAngle) {

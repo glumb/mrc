@@ -4,7 +4,7 @@
 #include "RingBuffer.h"
 #include "EEPromStorage.h"
 #include "MRILParser.h"
-#include "CommunicationInterface.h"
+#include "MRCPR.h"
 
 #define MRIL_OptionAndValueBufferSize 10
 
@@ -22,14 +22,14 @@ public:
     MRCPParser(EEPromStorage         & _EEPromStorage,
                RingBuffer            & _RingBuffer,
                MRILParser            & _MRILParser,
-               CommunicationInterface& _CommunicationInterface);
+               MRCPR& _MRCPR);
 
     void parseCommand(char         buffer[],
                       unsigned int length);
 
-    void parseMRCP(char incomingByte);
+    void parseChar(char incomingByte);
 
-    void listen();
+    void process();
     int  getBufferSize();
 
     int  getFullBufferSize();
@@ -41,10 +41,10 @@ private:
     EEPromStorage& _EEPromStorage;
     RingBuffer& _RingBuffer;
     MRILParser& _MRILParser;
-    CommunicationInterface& _CommunicationInterface;
+    MRCPR& _MRCPR;
 
-    enum mrcpMode { HALT, QUEUE, EEPROM, EXECUTE };
-    mrcpMode MRCPMODE = EXECUTE;
+    enum MRCPMODE { HALT, QUEUE, EEPROM, EXECUTE };
+    MRCPMODE mrcpMode = EXECUTE;
 
     long commandNumber = 0;
 

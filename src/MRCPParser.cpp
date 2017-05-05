@@ -9,14 +9,14 @@ static Logger logger("MRCPParser");
 }
 
 
-MRCPParser::MRCPParser(EEPromStorage&          _EEPromStorage,
-                       RingBuffer&             _RingBuffer,
-                       MRILParser&             _MRILParser,
-                       CommunicationInterface& _CommunicationInterface) :
+MRCPParser::MRCPParser(EEPromStorage& _EEPromStorage,
+                       RingBuffer   & _RingBuffer,
+                       MRILParser   & _MRILParser,
+                       MRCPR        & _MRCPR) :
     _EEPromStorage(_EEPromStorage),
     _RingBuffer(_RingBuffer),
     _MRILParser(_MRILParser),
-    _CommunicationInterface(_CommunicationInterface) {}
+    _MRCPR(_MRCPR) {}
 
 void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     if (length == 0) { // dont parse an empty command
@@ -26,20 +26,15 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     switch (buffer[0]) {
     case MRCP_COMMAND_EXECUTE:
     {
-        unsigned int status;                                          // todo put in class
-        status = _RingBuffer.putBytesInFront(buffer + 1, length - 1); // queue in MRIL minus MRCP command
-
-        if (status == RingBuffer::STATUS_FULL) {
-            logger.warning("buffer full");
-        } else {
-            logger.info("command in buffer");
-        }
+        this->mrcpMode = MRCPMODE::EXECUTE;
+        _MRILParser.parse(buffer + 1, length - 1); // queue in MRIL minus MRCP command
 
         break;
     }
 
     case MRCP_COMMAND_QUEUE_IN:
     {
+        this->mrcpMode = MRCPMODE::QUEUE;
         unsigned int status;                                   // todo put in class
         status = _RingBuffer.putBytes(buffer + 1, length - 1); // queu in MRIL minus MRCP command
 
@@ -54,6 +49,7 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
     case MRCP_COMMAND_WRITE:
     {
+      this->mrcpMode = MRCPMODE::EEPROM;
         unsigned int status;                                   // todo put in class
         status = _RingBuffer.putBytes(buffer + 1, length - 1); // queu in MRIL minus MRCP command
 
@@ -70,6 +66,7 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
         logger.info("using default command (queue in): ");
         logger.info((char)buffer[0]);
         {
+             this->mrcpMode = MRCPMODE::QUEUE;
             unsigned int status;
 
             // logger.time("before ringbuffer");                         // todo put in class
@@ -87,7 +84,7 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     }
 }
 
-void MRCPParser::parseMRCP(char incomingByte) {
+void MRCPParser::parseChar(char incomingByte) {
     static bool frameStarted = false;
     static char inputByteBuffer[INPUT_BUFFER_SIZE];
     static unsigned int inputByteBufferPointer = 0;
@@ -140,27 +137,25 @@ void MRCPParser::parseMRCP(char incomingByte) {
     }
 }
 
-void MRCPParser::listen() {
-    if (MRCPMODE != HALT) {
+void MRCPParser::process() {
+    if (this->mrcpMode != MRCPMODE::HALT) {
         if (this->_MRILParser.isDone()) { // todo add additionalAxis
         }
     }
 
-    switch (MRCPMODE) {
+    switch (this->mrcpMode) {
     case QUEUE:
 
         if (this->_RingBuffer.getSize() > 0) {
             logger.info("Consuming from buffer");
 
-            if (_RingBuffer.getSize() > 0) { // buffer is not empty
-                char mrilInstruction[INPUT_BUFFER_SIZE];
+            char mrilInstruction[INPUT_BUFFER_SIZE];
 
-                char length = _RingBuffer.getMessage(mrilInstruction);
+            char length = _RingBuffer.getMessage(mrilInstruction);
 
-                this->_MRILParser.parse(mrilInstruction, length);
+            this->_MRILParser.parse(mrilInstruction, length);
 
-                // Serial.println(String("$$") + _RingBuffer.getSize());
-            }
+            // Serial.println(String("$$") + _RingBuffer.getSize());
         }
     }
 }
@@ -171,12 +166,6 @@ int MRCPParser::getBufferSize() {
 
 int MRCPParser::getFullBufferSize() {
     return _RingBuffer.getSize();
-}
-
-void MRCPParser::sendMessage(String message) {
-    Serial.print(MRCP_START_FRAME);
-    Serial.print(message);
-    Serial.print(MRCP_END_FRAME);
 }
 
 char MRCPParser::toUpper(char ch1)

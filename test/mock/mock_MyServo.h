@@ -2,12 +2,31 @@
 #define MOCK_MY_SERVO_H 1
 
 #include "MyServo.h"
+#include "gmock/gmock.h"
 
-class MockMyServo : public MyServo
-{
+class mock_MyServo : public MyServo {
 public:
-    MOCK_METHOD1(setTargetRadAngle,    void(float radAngle));
-    MOCK_METHOD0(getPinNumber,    int());
+
+    mock_MyServo(int          pinNumber,
+                 float        maxAngleVelocity,
+                 unsigned int minFreq,
+                 unsigned int maxFreq,
+                 float        minRadAngle,
+                 float        maxRadAngle,
+                 float        homeRadAngle) :
+        MyServo(pinNumber,
+                maxAngleVelocity,
+                minFreq,
+                maxFreq,
+                minRadAngle,
+                maxRadAngle,
+                homeRadAngle) {}
+
+    ~mock_MyServo() {}
+
+    MOCK_METHOD1(setTargetRadAngle, void(float radAngle));
+    MOCK_METHOD0(getCurrentAngle, float());
+    MOCK_METHOD0(getPinNumber, int());
 };
 
 #endif /* ifndef MOCK_MY_SERVO_H */

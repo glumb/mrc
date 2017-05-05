@@ -23,6 +23,11 @@ class String : public std::string {
   String(const std::string& string) : std::string(string) {}
   String(const char* string) : std::string(string) {}
   String(const float val) : std::string(std::to_string(val)) {}
+  String(const int val) : std::string(std::to_string(val)) {}
+  String(const unsigned int val) : std::string(std::to_string(val)) {}
+  String(const long val) : std::string(std::to_string(val)) {}
+  String(const unsigned long val) : std::string(std::to_string(val)) {}
+  String(const double val) : std::string(std::to_string(val)) {}
 
   String substring(int start) {
     return substr(start);

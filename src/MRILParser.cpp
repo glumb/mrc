@@ -37,30 +37,30 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
         return;
     }
 
-
     // todo use atomic instead to also not invoke timers when setting axis R0 R1 and so on....
     this->_RobotController.startTransaction();
 
-    for (size_t i = 0; i < length; i++) {
-        char c = mrilInstruction[i];
+    for (size_t i = 0; i < length; i++) {                               // l:6 i:0    c:90
+        char c        = mrilInstruction[i];                             // i:1 c:51  - i:2 c:65
+        char nextChar = (i == length - 1) ? 3 : mrilInstruction[i + 1]; // ETX
 
-        if ((c == '#') || (c == '(')) { // starting comment
-            break;                      // do not interpret any other symbols for this instruction
+        if ((c == '#') || (c == '(')) {                                 // starting comment
+            break;                                                      // do not interpret any other symbols for this instruction
         }
 
 
         // is a digit or dot or minus or uppercase letter
-        if (((c >= 48) && (c <= 57)) || (c == 46) || ((c == 45) || ((c >= 65) && (c <= 90)))) {
+        if (((c >= 48) && (c <= 57)) || (c == 46) || (c == 45) || ((c >= 65) && (c <= 90))) {
             command[commandPointer] = c;
             commandPointer++;
 
             if (commandPointer >= MRIL_COMMAND_SIZE) {
-                Serial.println("max option and value size exceeded");
+                _logger.warning("max option and value size exceeded");
             }
         } else  {
             // do not parse unknown chars
-            Serial.print("unknown char ");
-            Serial.println((char)c);
+            _logger.warning("unknown char ");
+            _logger.warning((char)c);
             continue;
         }
 
@@ -68,9 +68,10 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
 
         // command finished, interpret it.
-        if (((c >= 65) && (c <= 90) && (i > 0)) || (i == length - 1)) { // is a character or end
+        if (((nextChar >= 65) && (nextChar <= 90)) || (nextChar == 3)) { // is a character or end
             // no options means read command
-            commandType = (commandPointer == 0) ? CommandTypes::READ : CommandTypes::WRITE;
+            commandType = (commandPointer == 1) ? CommandTypes::READ : CommandTypes::WRITE; // todo make decision for individual symbol
+
 
             if ((commandType != lastCommandType) && (lastCommandType != CommandTypes::NONE)) {
                 _logger.warning("Do not mix read and write instructions!");
@@ -82,28 +83,30 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
             command[commandPointer] = '\0'; // NULL terminate to form a string
 
-            commandPointer = 0;
-
             switch (symbol) {
             case MRIL_COMMAND_MOVEMENT_METHOD: {
-                unsigned int movementMethodCode = atoi(command + 1);
-                _logger.info("MRIL_COMMAND_MOVE " + String(movementMethodCode));
+                if (commandType == CommandTypes::READ) {
+                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_MOVEMENT_METHOD) + String(this->_RobotController.getMovementMethod()));
+                } else {
+                    unsigned int movementMethodCode = atoi(command + 1);
+                    _logger.info("MRIL_COMMAND_MOVE " + String(movementMethodCode));
 
-                switch (movementMethodCode) {
-                case MRIL_MOVEMENT_METHOD_P2P:
-                    _logger.info("MRIL_MOVEMENT_METHOD_P2P");
+                    switch (movementMethodCode) {
+                    case MRIL_MOVEMENT_METHOD_P2P:
+                        _logger.info("MRIL_MOVEMENT_METHOD_P2P");
 
-                    this->_RobotController.setMovementMethod(RobotController::MOVEMENT_METHODS::P2P);
-                    break;
+                        this->_RobotController.setMovementMethod(RobotController::MOVEMENT_METHODS::P2P);
+                        break;
 
-                case MRIL_MOVEMENT_METHOD_LINEAR:
-                    _logger.info("MRIL_MOVEMENT_METHOD_LINEAR");
-                    this->_RobotController.setMovementMethod(RobotController::MOVEMENT_METHODS::LINEAR);
-                    break;
+                    case MRIL_MOVEMENT_METHOD_LINEAR:
+                        _logger.info("MRIL_MOVEMENT_METHOD_LINEAR");
+                        this->_RobotController.setMovementMethod(RobotController::MOVEMENT_METHODS::LINEAR);
+                        break;
 
-                case MRIL_MOVEMENT_METHOD_CIRCULAR:
-                    Serial.println("CIRCULAR not implemented");
-                    break;
+                    case MRIL_MOVEMENT_METHOD_CIRCULAR:
+                        _logger.warning("CIRCULAR not implemented");
+                        break;
+                    }
                 }
                 break;
             }
@@ -122,80 +125,81 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
             }
 
             case MRIL_COMMAND_SET_X:
-            {
-                if (commandType == CommandTypes::READ) {
-                    this->_MRCPR.sendMessage(this->_RobotController.getCurrentPose(RobotController::POSITION::X));
-                } else {
-                    float value = atof(command + 1); // shift one because option V<opt><val>
-                    _logger.info("setting x to: " + String(value));
-                    this->_RobotController.setTargetPose(RobotController::POSITION::X, value);
-                }
-                break;
-            }
-
             case MRIL_COMMAND_SET_Y:
-            {
-                float value = atof(command + 1); // shift one because option V<opt><val>
-                _logger.info("setting y to: " + String(value));
-
-                this->_RobotController.setTargetPose(RobotController::POSITION::Y, value);
-                break;
-            }
-
             case MRIL_COMMAND_SET_Z:
-            {
-                float value = atof(command + 1); // shift one because option V<opt><val>
-                _logger.info("setting z to: " + String(value));
-
-                this->_RobotController.setTargetPose(RobotController::POSITION::Z, value);
-                break;
-            }
-
             case MRIL_COMMAND_SET_A:
-            {
-                float value = atof(command + 1); // shift one because option V<opt><val>
-                Serial.println(value);
-
-                this->_RobotController.setTargetPose(RobotController::POSITION::A, value);
-                break;
-            }
-
             case MRIL_COMMAND_SET_B:
-            {
-                float value = atof(command + 1); // shift one because option V<opt><val>
-                Serial.println(value);
-
-                this->_RobotController.setTargetPose(RobotController::POSITION::B, value);
-                break;
-            }
-
             case MRIL_COMMAND_SET_C:
             {
-                float value = atof(command + 1); // shift one because option V<opt><val>
-                Serial.println(value);
+                RobotController::POSITION pose;
 
-                this->_RobotController.setTargetPose(RobotController::POSITION::C, value);
+                switch (symbol) {
+                case MRIL_COMMAND_SET_X:
+                    pose = RobotController::POSITION::X;
+                    break;
+
+                case MRIL_COMMAND_SET_Y:
+                    pose = RobotController::POSITION::Y;
+                    break;
+
+                case MRIL_COMMAND_SET_Z:
+                    pose = RobotController::POSITION::Z;
+                    break;
+
+                case MRIL_COMMAND_SET_A:
+                    pose = RobotController::POSITION::A;
+                    break;
+
+                case MRIL_COMMAND_SET_B:
+                    pose = RobotController::POSITION::B;
+                    break;
+
+                case MRIL_COMMAND_SET_C:
+                    pose = RobotController::POSITION::C;
+                    break;
+
+                default:
+                    break;
+
+                    // should not get here lel
+                }
+
+
+                if (commandType == CommandTypes::READ) {
+                    this->_MRCPR.sendMessage(String(symbol) + String(this->_RobotController.getCurrentPose(pose)));
+                } else {
+                    float value = atof(command + 1); // shift one because option V<opt><val>
+                    _logger.info("setting " + String(symbol) + " to: " + String(value));
+
+                    this->_RobotController.setTargetPose(pose, value);
+                }
                 break;
             }
 
-            case MRIL_COMMAND_ROTATE:                       // S M R4 1.12345 E
+            case MRIL_COMMAND_ROTATE:                                               // S M R4 1.12345 E
             {
-                float value         = atof(command + 1);
-                unsigned int option = (int)command[1] - 48; // shift one because option V<opt><val>
+                unsigned int option = (int)command[1] - 48;                         // shift one because option V<opt><val>
 
-                _logger.info("Rotate R" + String(option) + " value " + String(value));
+                if ((commandType == CommandTypes::READ) || (commandPointer == 2)) { // is still read, when one option is present
+                    commandType = CommandTypes::READ;
+                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_VELOCITY) + String(this->_RobotController.getCurrentLogicalAngle(option)));
+                } else {
+                    int value = atoi(command + 2);
 
-                // _logger.info(String(value));
+                    _logger.info("Rotate R" + String(option) + " value " + String(value));
 
-                this->_RobotController.setTargetAngle(option, value / 180.0 * PI);
+                    // _logger.info(String(value));
 
-                if (option >= 6) {
-                    this->_AdditionalAxisController.setAxisToAngle(option - 6, value / 180.0 * PI);
+                    this->_RobotController.setTargetLogicalAngle(option, value * DEG_TO_RAD);
+
+                    if (option >= 6) {
+                        this->_AdditionalAxisController.setAxisToAngle(option - 6, value / 180.0 * PI);
+                    }
+
+                    // servos[option]->setTargetRadAngle(value / 180 * PI);
+
+                    // this->_RobotController.setAxisRotation(option,value);
                 }
-
-                // servos[option]->setTargetRadAngle(value / 180 * PI);
-
-                // this->_RobotController.setAxisRotation(option,value);
                 break;
             }
 
@@ -205,9 +209,9 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
                 unsigned int option = (int)command[1] - 48; // shift one because option V<opt><val>
 
                 if (option == 1) {
-                    Serial.println("not implemented");
+                    _logger.warning("not implemented");
                 } else {
-                    Serial.println(value);
+                    _logger.warning(value);
                 }
 
                 break;
@@ -234,7 +238,6 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
             case MRIL_COMMAND_WAIT:
             { // W<ms>
                 unsigned long ms = atol(command + 1);
-                Serial.println(ms);
                 this->_WaitController.waitMs(ms);
                 break;
             }
@@ -243,7 +246,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
             { // N0/1<number> 0 - executing - 1 executed
               // float value = atof(command+1);
                 tmpCommandNumber = atoi(command + 1);
-                this->_MRCPR.sendMessage(String(MRIL_COMMAND_NUMBER) + "0" + String(this->commandNumber));
+                this->_MRCPR.sendMessage("N0" + String(tmpCommandNumber));
 
                 break;
             }
@@ -256,17 +259,19 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
                 break;
 
             default:
-                Serial.println("unknown Symbol ");
-                Serial.println((char)symbol);
+                _logger.warning("unknown Symbol ");
+                _logger.warning((char)symbol);
             } // switch
+
+            commandPointer = 0;
         }     // if command
-    }         // for
+    } // for
 
     this->_RobotController.endTransaction();
 
     if (commandType == CommandTypes::READ) {
         // read command - finished after parsing
-        this->_MRCPR.sendMessage(String(MRIL_COMMAND_NUMBER) + "1" + String(tmpCommandNumber));
+        this->_MRCPR.sendMessage("N1" + String(tmpCommandNumber));
     } else if (commandType == CommandTypes::WRITE) {
         // write command - change the cN
         this->commandNumber = tmpCommandNumber;
