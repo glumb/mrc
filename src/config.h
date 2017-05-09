@@ -1,13 +1,13 @@
 #include "Arduino.h"
 #include "Kinematic.h"
 
-// ---- Servos ---- todo why not pwm pins? 3-6 9-10 20-23
-#define pin_robot_servo_0 3
-#define pin_robot_servo_1 4
-#define pin_robot_servo_2 5
-#define pin_robot_servo_3 6
-#define pin_robot_servo_4 9
-#define pin_robot_servo_5 10
+// ---- Servos ---- todo why not pwm pins? 3-6 9-10 20-21
+#define pin_servo_0 3
+#define pin_servo_1 4
+#define pin_servo_2 5
+#define pin_servo_3 6
+#define pin_servo_4 9
+#define pin_servo_5 10
 
 #define pin_additional_servo_6 20
 #define pin_additional_servo_7 -1
@@ -15,12 +15,12 @@
 // v6
 // pinNumber, maxAngularVel degree/sec, calibMin, calibMax, angleDegMin, angleDegMax, home position
 const float servoConfig[6][7] = {
-    { pin_robot_servo_0, 160.00,   700.00, 2380.00,  -90.00,   90.00, 0 },
-    { pin_robot_servo_1, 160.00,  1880.00,  710.00,  -90.00,   45.00, 0 },
-    { pin_robot_servo_2, 160.00,   640.00, 2330.00, -135.00,   45.00, 0 },
-    { pin_robot_servo_3, 160.00,   740.00, 2260.00,  -90.00,   85.00, 0 },
-    { pin_robot_servo_4, 160.00,  2360.00,  730.00,  -15.00,  140.00, 0 },
-    { pin_robot_servo_5, 160.00,   740.00, 2200.00,  -90.00,   60.00, 0 }
+    { pin_servo_0,  150 * DEG_TO_RAD,  700.00, 2380.00,  -90.00 * DEG_TO_RAD,  90.00 * DEG_TO_RAD, 0 },
+    { pin_servo_1,  150 * DEG_TO_RAD,  710.00, 1909.00,  -45.00 * DEG_TO_RAD,  90.00 * DEG_TO_RAD, 0 },
+    { pin_servo_2,  150 * DEG_TO_RAD, 2290.00,  650.00,  -45.00 * DEG_TO_RAD, 135.00 * DEG_TO_RAD, 0 },
+    { pin_servo_3,  150 * DEG_TO_RAD,  740.00, 2260.00,  -90.00 * DEG_TO_RAD,  85.00 * DEG_TO_RAD, 0 },
+    { pin_servo_4,  150 * DEG_TO_RAD,  730.00, 2340.00, -140.00 * DEG_TO_RAD,  15.00 * DEG_TO_RAD, 0 },
+    { pin_servo_5,  150 * DEG_TO_RAD,  740.00, 2200.00,  -90.00 * DEG_TO_RAD,  60.00 * DEG_TO_RAD, 0 }
 };
 
 // float geometry[5][3] = { { 4.6, 8, 0 }, { 0, 11.6, 0 }, { 1.5, 2, 0 }, { 11, 0, 0 }, { 0, -3, 0 } };
@@ -116,7 +116,7 @@ void physicalToLogicalAngles(float angles[6]) {
 //     angles[2] += angles[1];
 // }
 
-const float additionalAxisServoConfig[2][6] = {
-    { pin_additional_servo_6, 160.00, 1888.00,    1222,    0.00,  1.00 },
-    { pin_additional_servo_7, 160.00,    1000, 2000.00,  -90.00, 90.00 }
+const float additionalAxisServoConfig[2][7] = {
+    { pin_additional_servo_6, 160.00 * DEG_TO_RAD, 1888.00,    1222,    0.00 * DEG_TO_RAD,  1.00 * DEG_TO_RAD, 0 },
+    { pin_additional_servo_7, 160.00 * DEG_TO_RAD,    1000, 2000.00,  -90.00 * DEG_TO_RAD, 90.00 * DEG_TO_RAD, 0 }
 };

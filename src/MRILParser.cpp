@@ -68,10 +68,13 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
 
         // command finished, interpret it.
-        if (((nextChar >= 65) && (nextChar <= 90)) || (nextChar == 3)) { // is a character or end
+        if (((nextChar >= 65) && (nextChar <= 90)) || (nextChar == 3)) {                    // is a character or end
             // no options means read command
             commandType = (commandPointer == 1) ? CommandTypes::READ : CommandTypes::WRITE; // todo make decision for individual symbol
 
+            if (command[0] == MRIL_COMMAND_NUMBER) {
+                commandType = CommandTypes::NONE;
+            }
 
             if ((commandType != lastCommandType) && (lastCommandType != CommandTypes::NONE)) {
                 _logger.warning("Do not mix read and write instructions!");
@@ -166,12 +169,40 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
 
                 if (commandType == CommandTypes::READ) {
-                    this->_MRCPR.sendMessage(String(symbol) + String(this->_RobotController.getCurrentPose(pose)));
+                    switch (symbol) {
+                    case MRIL_COMMAND_SET_X:
+                    case MRIL_COMMAND_SET_Y:
+                    case MRIL_COMMAND_SET_Z:
+                        this->_MRCPR.sendMessage(String(symbol) + String(this->_RobotController.getCurrentPose(pose)));
+                        break;
+
+                    case MRIL_COMMAND_SET_A:
+                    case MRIL_COMMAND_SET_B:
+                    case MRIL_COMMAND_SET_C:
+                        this->_MRCPR.sendMessage(String(symbol) + String(this->_RobotController.getCurrentPose(pose) * RAD_TO_DEG));
+
+                    default:
+                        break;
+                    }
                 } else {
                     float value = atof(command + 1); // shift one because option V<opt><val>
                     _logger.info("setting " + String(symbol) + " to: " + String(value));
 
-                    this->_RobotController.setTargetPose(pose, value);
+                    switch (symbol) {
+                    case MRIL_COMMAND_SET_X:
+                    case MRIL_COMMAND_SET_Y:
+                    case MRIL_COMMAND_SET_Z:
+                        this->_RobotController.setTargetPose(pose, value);
+                        break;
+
+                    case MRIL_COMMAND_SET_A:
+                    case MRIL_COMMAND_SET_B:
+                    case MRIL_COMMAND_SET_C:
+                        this->_RobotController.setTargetPose(pose, value * DEG_TO_RAD);
+
+                    default:
+                        break;
+                    }
                 }
                 break;
             }
@@ -182,7 +213,8 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
                 if ((commandType == CommandTypes::READ) || (commandPointer == 2)) { // is still read, when one option is present
                     commandType = CommandTypes::READ;
-                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_VELOCITY) + String(this->_RobotController.getCurrentLogicalAngle(option)));
+                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_ROTATE) + String(option) +
+                                             String(this->_RobotController.getCurrentLogicalAngle(option) * RAD_TO_DEG));
                 } else {
                     int value = atoi(command + 2);
 

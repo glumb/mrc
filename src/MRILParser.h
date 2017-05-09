@@ -42,6 +42,9 @@ const unsigned int MRIL_MOVEMENT_METHOD_P2P      = 0;
 const unsigned int MRIL_MOVEMENT_METHOD_LINEAR   = 1;
 const unsigned int MRIL_MOVEMENT_METHOD_CIRCULAR = 2;
 
+#ifndef MOCK_VIRTUAL // used for setting methods to virtual in test environment
+#define MOCK_VIRTUAL
+#endif
 
 // todo move the parsers to the module Additional axis, Robocon and IOLogic or create a dedicated parser module
 
@@ -54,7 +57,7 @@ public:
                WaitController          & _WaitController,
                MRCPR                   & _MRCPR);
 
-    void parse(char mrilInstruction[],
+    MOCK_VIRTUAL void parse(char mrilInstruction[],
                unsigned int  length);
 
     void process();

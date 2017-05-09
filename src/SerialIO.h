@@ -19,13 +19,10 @@ public:
     void process() {
         unsigned int bytesRead = 0;
 
-        // logger.resetTime();
-
         while (Serial.available() && bytesRead < READ_NUMBER_OF_BYTES_FROM_SERIAL_BEFORE_CONTINUE) {
             // todo check if is nullpointer?
             this->dataCallback(Serial.read());
 
-            // logger.time("after serial read");
             bytesRead++;
         }
     }
@@ -46,7 +43,11 @@ public:
     }
 
     void transmit(char c) {
+
         Serial.print(c);
+        if (c ==  '\r') {
+          Serial.print('\n');
+        }
     }
 
     void transmit(String string) {

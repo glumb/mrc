@@ -453,7 +453,7 @@ void Kinematic::calculateCoordinates(float R0, float R1, float R2, float R3, flo
     }
 
 
-    jointsResult[6][0] = thetaX;
+    jointsResult[6][0] = thetaX; //a->z?
     jointsResult[6][1] = thetaY;
     jointsResult[6][2] = thetaZ;
 

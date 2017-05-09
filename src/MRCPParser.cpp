@@ -49,7 +49,7 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
     case MRCP_COMMAND_WRITE:
     {
-      this->mrcpMode = MRCPMODE::EEPROM;
+        this->mrcpMode = MRCPMODE::EEPROM;
         unsigned int status;                                   // todo put in class
         status = _RingBuffer.putBytes(buffer + 1, length - 1); // queu in MRIL minus MRCP command
 
@@ -66,7 +66,7 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
         logger.info("using default command (queue in): ");
         logger.info((char)buffer[0]);
         {
-             this->mrcpMode = MRCPMODE::QUEUE;
+            this->mrcpMode = MRCPMODE::QUEUE;
             unsigned int status;
 
             // logger.time("before ringbuffer");                         // todo put in class
@@ -140,22 +140,22 @@ void MRCPParser::parseChar(char incomingByte) {
 void MRCPParser::process() {
     if (this->mrcpMode != MRCPMODE::HALT) {
         if (this->_MRILParser.isDone()) { // todo add additionalAxis
-        }
-    }
+            switch (this->mrcpMode) {
+            case QUEUE:
 
-    switch (this->mrcpMode) {
-    case QUEUE:
+                if (this->_RingBuffer.getSize() > 0) {
+                    logger.info("Consuming from buffer");
 
-        if (this->_RingBuffer.getSize() > 0) {
-            logger.info("Consuming from buffer");
+                    char mrilInstruction[INPUT_BUFFER_SIZE];
 
-            char mrilInstruction[INPUT_BUFFER_SIZE];
+                    char length = _RingBuffer.getMessage(mrilInstruction);
 
-            char length = _RingBuffer.getMessage(mrilInstruction);
+                    this->_MRILParser.parse(mrilInstruction, length);
 
-            this->_MRILParser.parse(mrilInstruction, length);
-
-            // Serial.println(String("$$") + _RingBuffer.getSize());
+                    // Serial.println(String("$$") + _RingBuffer.getSize());
+                }
+                break;
+            }
         }
     }
 }

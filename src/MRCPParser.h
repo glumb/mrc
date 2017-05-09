@@ -16,6 +16,11 @@
 
 #define READ_NUMBER_OF_BYTES_FROM_SERIAL_BEFORE_CONTINUE 30
 
+
+#ifndef MOCK_VIRTUAL // used for setting methods to virtual in test environment
+#define MOCK_VIRTUAL
+#endif
+
 class MRCPParser {
 public:
 
@@ -24,10 +29,10 @@ public:
                MRILParser            & _MRILParser,
                MRCPR& _MRCPR);
 
-    void parseCommand(char         buffer[],
+    MOCK_VIRTUAL void parseCommand(char         buffer[],
                       unsigned int length);
 
-    void parseChar(char incomingByte);
+    MOCK_VIRTUAL void parseChar(char incomingByte);
 
     void process();
     int  getBufferSize();

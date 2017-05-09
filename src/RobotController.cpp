@@ -110,6 +110,7 @@ void RobotController::getCurrentPose(float pose[6]) {
         // std::cout << "get Pose angles "<<angles[i] << '\n';
     }
     this->physicalToLogicalAngles(angles);
+
     this->_Kinematic.forward(
         angles[0],
         angles[1],
@@ -224,6 +225,7 @@ void RobotController::setTargetPose(POSITION position, float value) {
         this->targetPose[5] = value;
         break;
     }
+    this->targetPoseChanged = true;
 
     this->state = PREPARE_MOVE;
 }
@@ -402,6 +404,7 @@ void RobotController::process() {
         // transactions are used to set multiple values (x,y,r1,r2,r3..) in one set and apply them all at once
         // do not strat a new move, when in a transaction
         if (this->inTransaction) {
+            logger.info("in transaction");
             break;
         }
 
@@ -413,6 +416,7 @@ void RobotController::process() {
         //
         // set Angles and pose to be in sync
         if (this->targetAnglesChanged) {
+            logger.info("target angles changed");
             this->_Kinematic.forward(this->targetAngles[0],
                                      this->targetAngles[1],
                                      this->targetAngles[2],
@@ -421,6 +425,7 @@ void RobotController::process() {
                                      this->targetAngles[5],
                                      this->targetPose);
         } else if (this->targetPoseChanged) {
+            logger.info("target pose changed");
             this->_Kinematic.inverse(this->targetPose[0],
                                      this->targetPose[1],
                                      this->targetPose[2],
@@ -429,12 +434,15 @@ void RobotController::process() {
                                      this->targetPose[5],
                                      this->targetAngles);
         } else {
+            logger.error("nothing changed, still PREPARE MOVE");
+
             // pose not changed
             this->state = IDLE;
         }
 
         if (this->targetPoseChanged && this->targetAnglesChanged) {
             logger.error("Do not change pose and angles in one transaction!");
+            this->state = IDLE;
             return;
         }
 
@@ -444,6 +452,20 @@ void RobotController::process() {
 
         this->getCurrentPose(this->startPose);            // todo use current pose
         this->getCurrentLogicalAngles(this->startAngles); // todo use current pose
+
+        logger.info("start pose 0: " + String(this->startPose[0]));
+        logger.info("start pose 1: " + String(this->startPose[1]));
+        logger.info("start pose 2: " + String(this->startPose[2]));
+        logger.info("start pose 3: " + String(this->startPose[3]));
+        logger.info("start pose 4: " + String(this->startPose[4]));
+        logger.info("start pose 5: " + String(this->startPose[5]));
+
+        logger.info("start angles 0: " + String(this->startAngles[0] * RAD_TO_DEG));
+        logger.info("start angles 1: " + String(this->startAngles[1] * RAD_TO_DEG));
+        logger.info("start angles 2: " + String(this->startAngles[2] * RAD_TO_DEG));
+        logger.info("start angles 3: " + String(this->startAngles[3] * RAD_TO_DEG));
+        logger.info("start angles 4: " + String(this->startAngles[4] * RAD_TO_DEG));
+        logger.info("start angles 5: " + String(this->startAngles[5] * RAD_TO_DEG));
 
         if (this->_anglesEqual(this->startAngles, this->targetAngles)) {
             this->state = IDLE;
@@ -505,8 +527,11 @@ void RobotController::process() {
             //             // todo include only rotation
             float distance =  sqrt(pow(dx, 2) +  pow(dy, 2) +  pow(dz, 2));
 
-            int distanceSteps = (distance / this->interpolationDistanceIncrement); // |-.-.-.-.-.| 5 units '-' is 5 steps '.'
-            int angleSteps    = (this->interpolationRotationAngle / this->interpolationOrientationAngleIncrement);
+            int distanceSteps = (distance / this->interpolationDistanceIncrement) + 1;                                 // |-.-.-.-.-.| 5
+                                                                                                                       // units '-' is 5
+                                                                                                                       // steps '.'
+            int angleSteps    = (this->interpolationRotationAngle / this->interpolationOrientationAngleIncrement) + 1; // +1 to not divide
+                                                                                                                       // by 0 later
 
             totalInterpolationSteps = (distanceSteps > angleSteps) ? distanceSteps : angleSteps;
 
@@ -540,6 +565,7 @@ void RobotController::process() {
 
         case LINEAR:
         {
+            logger.info("LINEAR");
             float fraction;
 
             // |-.-.-.-.-| '.':steps '-':sections
@@ -553,47 +579,25 @@ void RobotController::process() {
             float db = this->targetPose[4] - this->startPose[4];
             float dc = this->targetPose[5] - this->startPose[5];
 
+            logger.info("--- dX dY dZ dA dB dC ---");
+            logger.info(dx);
+            logger.info(dy);
+            logger.info(dz);
+            logger.info(da);
+            logger.info(db);
+            logger.info(dc);
+            logger.info("-----");
+
             // todo do this properly with quaternions
 
-            float b = 0;
-            float c = 0;
+            float a = this->targetPose[3];
+            float b = this->targetPose[4];
+            float c = this->targetPose[5];
 
-            if ((fabs(db) > 0.0001) || (fabs(dc) > 0.0001)) {
-                float targetVector[3];
-
-                this->rodrigues(targetVector, this->rotationAxisVectorNorm, this->startOrientationVector,
-                                fraction * this->interpolationRotationAngle);
-
-                float rotationMatrix[3][3];
-
-                float length;
-                NORM(targetVector, targetVector, length);
-
-                // X component
-                rotationMatrix[0][0] = targetVector[0];
-                rotationMatrix[1][0] = targetVector[1];
-                rotationMatrix[2][0] = targetVector[2];
-
-                // todo simplify
-
-                if ((rotationMatrix[2][0] !=  1) || (rotationMatrix[2][0] !=  -1)) {
-                    b = PI + asin(rotationMatrix[2][0]);
-                    c = atan2(rotationMatrix[1][0] / cos(b), rotationMatrix[0][0] / cos(b));
-                } else {
-                    c = 0; // anything; can set to
-
-                    if (rotationMatrix[2][0] ==  -1) {
-                        b = PI / 2;
-                    } else {
-                        b = -PI / 2;
-                    }
-                }
-            } else {
-                b = this->targetPose[4];
-                c = this->targetPose[5];
-            }
 
             logger.info("fraction " + String(fraction));
+            logger.info("currentInterpolationStep " + String(currentInterpolationStep));
+            logger.info("totalInterpolationSteps " + String(totalInterpolationSteps));
 
             float distance =  sqrt(pow(dx, 2) +  pow(dy, 2) +  pow(dz, 2)); // todo if distance == 0, only pose change
 
@@ -609,18 +613,25 @@ void RobotController::process() {
             tmpTargetPose[1] = this->startPose[1] + dy;
             tmpTargetPose[2] = this->startPose[2] + dz;
 
-            // std::cout << "tmp x target ...... " << tmpTargetPose[0] << '\n';
-            // std::cout << "step ...... " << currentInterpolationStep << '\n';
-            // std::cout << "total step ...... " << totalInterpolationSteps << '\n';
-            tmpTargetPose[3] = this->startPose[3] + da;
+            logger.info("--- startPose ---");
+            logger.info(this->startPose[0]);
+            logger.info(this->startPose[1]);
+            logger.info(this->startPose[2]);
+            logger.info("-----");
+
+
+            tmpTargetPose[3] = a;
             tmpTargetPose[4] = b;
             tmpTargetPose[5] = c;
 
-            logger.info("--- A B C ---",  false);
-            logger.info(tmpTargetPose[3], false);
-            logger.info(tmpTargetPose[4], false);
-            logger.info(tmpTargetPose[5], false);
-            logger.info("-----",          false);
+            logger.info("--- X Y Z A B C ---", false);
+            logger.info(tmpTargetPose[0],      false);
+            logger.info(tmpTargetPose[1],      false);
+            logger.info(tmpTargetPose[2],      false);
+            logger.info(tmpTargetPose[3],      false);
+            logger.info(tmpTargetPose[4],      false);
+            logger.info(tmpTargetPose[5],      false);
+            logger.info("-----",               false);
 
             // v = s/t  t = s/v
             moveInTime = (distance / (float)(totalInterpolationSteps)) / this->maxVelocity;
@@ -634,26 +645,20 @@ void RobotController::process() {
                 tmpTargetPose[5],
                 tmpTargetAngles
                 );
-            float joints[6];
-            this->_Kinematic.forward(
-                tmpTargetAngles[0],
-                tmpTargetAngles[1],
-                tmpTargetAngles[2],
-                tmpTargetAngles[3],
-                tmpTargetAngles[4],
-                tmpTargetAngles[5],
-                joints);
-
 
             if (returnCode == Kinematic::OK) {} else {
                 logger.warning("Oh noo, out of bounds");
+
+                // set tartgets to prevent locking of other axis
+                this->getCurrentPose(this->targetPose);
+                this->getCurrentLogicalAngles(this->targetAngles);
                 this->state = IDLE;
                 return;
             }
 
             // todo handle singularity
             if (fabs(tmpTargetAngles[4] - (PI / 2.0)) < 0.05) { // axis 5 and 3 in line
-                Serial.println("singularity axis 5,3");
+                logger.warning("singularity axis 5,3");
                 tmpTargetAngles[3] = this->Servos[3]->getCurrentAngle();
                 tmpTargetAngles[5] = this->Servos[5]->getCurrentAngle();
             }
@@ -662,17 +667,28 @@ void RobotController::process() {
         }
 
         case CIRCULAR:
+            logger.error("CIRCULAR interpolation not implemented, yet");
             break;
         }
+
+        logger.info("tmpTarget angles 0: " + String(tmpTargetAngles[0] * RAD_TO_DEG));
+        logger.info("tmpTarget angles 1: " + String(tmpTargetAngles[1] * RAD_TO_DEG));
+        logger.info("tmpTarget angles 2: " + String(tmpTargetAngles[2] * RAD_TO_DEG));
+        logger.info("tmpTarget angles 3: " + String(tmpTargetAngles[3] * RAD_TO_DEG));
+        logger.info("tmpTarget angles 4: " + String(tmpTargetAngles[4] * RAD_TO_DEG));
+        logger.info("tmpTarget angles 5: " + String(tmpTargetAngles[5] * RAD_TO_DEG));
 
 
         for (size_t i = 0; i < 6; i++) {
             if ((tmpTargetAngles[i] < this->logicalAngleLimits[i][0]) ||
                 (tmpTargetAngles[i] > this->logicalAngleLimits[i][1])) {
-                logger.warning("servo " + String(i) + " is out of logic angle: " + String(tmpTargetAngles[i] / PI * 180) + " min: "
+                logger.warning("servo " + String(i) + " is out of logic angle: " + String(tmpTargetAngles[i] * RAD_TO_DEG) + " min: "
                                + String(this->logicalAngleLimits[i][0] * RAD_TO_DEG) + " max "
-                               + String(this->logicalAngleLimits[i][1] * RAD_TO_DEG));
-                // std::cout << "outofangle " << i << '\n';
+                               + String(this->logicalAngleLimits[i][1] * RAD_TO_DEG) + " " + String(this->logicalAngleLimits[i][1]));
+
+                // set tartgets to prevent locking of other axis
+                this->getCurrentPose(this->targetPose);
+                this->getCurrentLogicalAngles(this->targetAngles);
                 this->state = IDLE;
                 return;
             }
@@ -687,6 +703,10 @@ void RobotController::process() {
                 logger.warning("servo " + String(i) + " is out of physical angle: " + String(tmpTargetAngles[i] / PI * 180) + " min: "
                                + String(this->Servos[i]->getMinRadAngle() / PI * 180) + " max "
                                + String(this->Servos[i]->getMaxRadAngle() / PI * 180));
+
+                // set tartgets to prevent locking of other axis (locking one axis also locks the others unless the locked axis is changed)
+                this->getCurrentPose(this->targetPose);
+                this->getCurrentLogicalAngles(this->targetAngles);
                 this->state = IDLE;
                 return;
             }
@@ -726,7 +746,7 @@ void RobotController::process() {
 
 bool RobotController::_poseEquals(float pos1[6], float pos2[6]) {
     for (unsigned int i = 0; i < 6; i++) {
-        if (pos1[i] - pos2[i] <= 1e-4) {
+        if (fabs(pos1[i] - pos2[i]) >= 1e-4) {
             return false;
         }
     }
@@ -735,7 +755,7 @@ bool RobotController::_poseEquals(float pos1[6], float pos2[6]) {
 
 bool RobotController::_anglesEqual(float angles1[6], float angles2[6]) {
     for (unsigned int i = 0; i < 6; i++) {
-        if (angles1[i] - angles2[i] <= 1e-4) {
+        if (fabs(angles1[i] - angles2[i]) >= 1e-4) {
             return false;
         }
     }

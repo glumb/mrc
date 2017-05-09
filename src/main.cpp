@@ -1,30 +1,38 @@
-#include "config.h"
-#include <Arduino.h>
-#include "MyServo.h"
-#include "TimerOne.h"
-#include "Kinematic.h"
-#include "Logger.h"
-#include "Display.h"
+// #define EXAMPLES 1
+#ifdef EXAMPLES
 
-#include "MRILParser.h"
-#include "RobotController.h"
-#include "IOLogic.h"
-#include "AdditionalAxisController.h"
-#include "WaitController.h"
+// #include "../examples/Servos.h"
+// #include "../examples/RobotController.h"
+# include "../examples/CalibrateServos.h"
+#else // ifdef EXAMPLES
 
-#include "MRCPParser.h"
-#include "EEPromStorage.h"
-#include "RingBuffer.h"
-#include "MRCPR.h"
+# include "config.h"
+# include <Arduino.h>
+# include "MyServo.h"
+# include "TimerOne.h"
+# include "Kinematic.h"
+# include "Logger.h"
+# include "Display.h"
 
-#include "SerialIO.h"
+# include "MRILParser.h"
+# include "RobotController.h"
+# include "IOLogic.h"
+# include "AdditionalAxisController.h"
+# include "WaitController.h"
+
+# include "MRCPParser.h"
+# include "EEPromStorage.h"
+# include "RingBuffer.h"
+# include "MRCPR.h"
+
+# include "SerialIO.h"
 
 // ---- I2C do not change! ----
-#define pin_sda   18
-#define pin_scl  19 // SCK
-#define pin_latch  17
+# define pin_sda   18
+# define pin_scl  19 // SCK
+# define pin_latch  17
 
-#define RINGBUFFER_SIZE 300
+# define RINGBUFFER_SIZE 300
 
 void updateServos();
 void onIncomingData(char c);
@@ -47,10 +55,10 @@ MRCPParser   *Mrcpparser;
 EEPromStorage Eepromstorage;
 RingBuffer    Ringbuffer(RINGBUFFER_SIZE);
 
-#define SERVOMIN  200  // usually 1000us
-#define SERVOMAX  2800 // usually 2000us
+# define SERVOMIN  200  // usually 1000us
+# define SERVOMAX  2800 // usually 2000us
 
-#define updateServosEveryMs 15
+# define updateServosEveryMs 15
 
 namespace {
 Logger logger("main");
@@ -72,12 +80,12 @@ void setup()
 
     for (size_t i = 0; i < 6; i++) {
         servos[i] = new MyServo(servoConfig[i][0],
-                                servoConfig[i][1] / 180.0 * PI,
+                                servoConfig[i][1],
                                 servoConfig[i][2],
                                 servoConfig[i][3],
-                                servoConfig[i][4] / 180 * PI,
-                                servoConfig[i][5] / 180 * PI,
-                                servoConfig[i][6] / 180 * PI
+                                servoConfig[i][4],
+                                servoConfig[i][5],
+                                servoConfig[i][6]
                                 );
 
         // servos[i]->setTargetRadAngle(0);
@@ -86,11 +94,11 @@ void setup()
     // additional axis
     for (size_t i = 0; i < 2; i++) {
         servos[i + 6] = new MyServo(additionalAxisServoConfig[i][0],
-                                    additionalAxisServoConfig[i][1] / 180.0 * PI,
+                                    additionalAxisServoConfig[i][1],
                                     additionalAxisServoConfig[i][2],
                                     additionalAxisServoConfig[i][3],
-                                    additionalAxisServoConfig[i][4] / 180 * PI,
-                                    additionalAxisServoConfig[i][5] / 180 * PI
+                                    additionalAxisServoConfig[i][4],
+                                    additionalAxisServoConfig[i][5]
                                     );
     }
 
@@ -100,12 +108,6 @@ void setup()
     Display.displayText(0, 8 * 1, "KIN");
     Display.show();
     delay(500);
-
-    // logical angle limits
-    for (size_t i = 0; i < 6; i++) {
-        logicAngleLimits[i][0] = logicAngleLimits[i][0] / 180 * PI;
-        logicAngleLimits[i][1] = logicAngleLimits[i][1] / 180 * PI;
-    }
 
     // Robot Controller
     RoboCon = new RobotController(servos, *Kin, logicAngleLimits, logicalToPhysicalAngles, physicalToLogicalAngles); // todo make function
@@ -148,6 +150,7 @@ void setup()
 }
 
 void onIncomingData(char c) {
+  Serial.println(c);
     Mrcpparser->parseChar(c);
 }
 
@@ -189,6 +192,7 @@ void loop()
 
     // logger.time("after Display");
     Serialio.process();
+    Mrilparser->process();
     Mrcpparser->process();
 
     for (size_t i = 0; i < 8; i++) {
@@ -258,3 +262,5 @@ void renderDisplay() {
     }
     Display.show(); // takes 40 ms!
 }
+
+#endif // ifdef EXAMPLES
