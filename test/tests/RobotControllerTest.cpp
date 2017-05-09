@@ -609,12 +609,5 @@ TEST_F(RobotControllerTest_MockServo, dontMoveWhenTargetIsOutOfLogicalLimits) {
     EXPECT_FALSE(Rob->isMoving());
     helper_moveToTargetPose(Rob,servos);
 
-    float targetAngles[6];
-    Rob->getTargetLogicalAngles(targetAngles);
-    EXPECT_NEAR(targetAngles[0], 91*DEG_TO_RAD, 1e-5);
-    EXPECT_NEAR(targetAngles[1], 91*DEG_TO_RAD, 1e-5);
-    EXPECT_NEAR(targetAngles[2], 91*DEG_TO_RAD, 1e-5);
-    EXPECT_NEAR(targetAngles[3], 91*DEG_TO_RAD, 1e-5);
-    EXPECT_NEAR(targetAngles[4], 91*DEG_TO_RAD, 1e-5);
-    EXPECT_NEAR(targetAngles[5], 91*DEG_TO_RAD, 1e-5);
+
 }
