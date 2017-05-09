@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-SerialMock *serialMock = serialMockInstance();
+static SerialMock *serialMock = serialMockInstance();
 
 #include "mock_RobotController.h"
 #include "mock_MRCPR.h"
@@ -129,7 +129,7 @@ TEST(MRILParserTest, setA)
     mock_RobotController R(servos, K,logicalAngleLimits, l2p, p2l);
     MRILParser MRILp(R, IO, A, W, Mrcpr);
 
-    EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::A, 15));
+    EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::A, 15*DEG_TO_RAD));
 
     char instruction[5] = { 'A', '1', '5', '.', '0' };
     MRILp.parse(instruction, 5);
@@ -140,7 +140,7 @@ TEST(MRILParserTest, setB)
     mock_RobotController R(servos, K,logicalAngleLimits, l2p, p2l);
     MRILParser MRILp(R, IO, A, W, Mrcpr);
 
-    EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::B, 15));
+    EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::B, 15*DEG_TO_RAD));
 
 
     char instruction[5] = { 'B', '1', '5', '.', '0' };
@@ -152,7 +152,7 @@ TEST(MRILParserTest, setC)
     mock_RobotController R(servos, K,logicalAngleLimits, l2p, p2l);
     MRILParser MRILp(R, IO, A, W, Mrcpr);
 
-    EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::C, 15));
+    EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::C, 15*DEG_TO_RAD));
 
 
     char instruction[5] = { 'C', '1', '5', '.', '0' };
@@ -186,9 +186,9 @@ TEST(MRILParserTest, setMultipleCoordinates)
     {
         InSequence d;
         EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::Z, 3)).Times(1).RetiresOnSaturation();
-        EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::A, 4)).Times(1).RetiresOnSaturation();
-        EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::B, 5)).Times(1).RetiresOnSaturation();
-        EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::C, 6)).Times(1).RetiresOnSaturation();
+        EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::A, 4*DEG_TO_RAD)).Times(1).RetiresOnSaturation();
+        EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::B, 5*DEG_TO_RAD)).Times(1).RetiresOnSaturation();
+        EXPECT_CALL(R, setTargetPose(mock_RobotController::POSITION::C, 6*DEG_TO_RAD)).Times(1).RetiresOnSaturation();
     }
 
     char instruction[8] = { 'Z', '3', 'A', '4', 'B', '5', 'C', '6' };

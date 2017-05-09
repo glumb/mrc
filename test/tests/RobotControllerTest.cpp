@@ -152,7 +152,7 @@ void helper_processServos(MyServo *servos[6]) {
     }
 }
 
-TEST_F(RobotControllerTest_MockServo, test) {
+TEST_F(RobotControllerTest_MyServo, test) {
     R->setTargetPose(1, 2, 3, 4, 5, 6);
 
 
@@ -209,49 +209,54 @@ TEST_F(RobotControllerTest_MyServo, MovementMethod) {
     R->process(); // PREPARE_MOVE->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 1.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 1.0, 1e-5);
 
     EXPECT_TRUE(R->isMoving());
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 2.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 2.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 3.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 3.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 4.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 4.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 5.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 5.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 6.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 6.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 7.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 7.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 8.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 8.0, 1e-5);
 
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 9.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 9.0, 1e-5);
+
+    R->process(); // MOVING->START_MOVE->MOVING
+    helper_processServos(servos);
+    R->getCurrentPose(pose);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 10.0, 1e-5);
 
 
     EXPECT_TRUE(R->isMoving());
@@ -259,7 +264,7 @@ TEST_F(RobotControllerTest_MyServo, MovementMethod) {
     R->process(); // MOVING->START_MOVE->MOVING
     helper_processServos(servos);
     R->getCurrentPose(pose);
-    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 10.0) * 10.0, 1e-5);
+    EXPECT_NEAR(pose[0], 18.6 + (5.0 / 11.0) * 11.0, 1e-5);
 
     R->process(); // MOVING->IDLE
     EXPECT_FALSE(R->isMoving());
