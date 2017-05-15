@@ -4,15 +4,20 @@
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/glumb/mrc/master/LICENSE.md)
 [![Travis](https://img.shields.io/travis/glumb/mrcl.svg)](https://travis-ci.org/glumb/mrc)
-[![Codecov](https://img.shields.io/codecov/c/github/glumb/mrc.svg)]()
 
 micropede robot controller 🤖🖥👾
+Zu den Robotern [hier entlang](https://micropede.de/shop#filter=.robot).
 
 This project is work in progress.
 Feel free to fork update and improve it 😃
 
+All configurations and settings are based on the robot model depiced below.
 
-# Getting started
+<img width="300" alt="bildschirmfoto 2017-05-15 um 12 11 43" src="https://cloud.githubusercontent.com/assets/3062564/26053066/b188e2ea-3967-11e7-8a45-2697041ca6a6.png"><img width="400" alt="bildschirmfoto 2017-05-15 um 12 12 08" src="https://cloud.githubusercontent.com/assets/3062564/26053074/bc6a01d0-3967-11e7-83c9-d572eef1bd12.png">
+<img width="603" alt="bildschirmfoto 2017-05-15 um 12 12 45" src="https://cloud.githubusercontent.com/assets/3062564/26053120/e27b9e38-3967-11e7-8cd5-38c0fa0669ca.png">
+
+
+## Getting started
 Clone the repo
 
 ```shell
@@ -51,13 +56,13 @@ Use the [MRCP/MRIL](https://github.com/glumb/mrcp) to control the robot.
 Send a few commands via serial to check if everything is working. `B` should return the free buffer size (300).
 
 
-# PlatformIO
+## PlatformIO
 
 This project was developed with the help of [PlatformIO](http://platformio.org) (PIO). PIO is an open source cross-platform build system and Atom based IDE. It is used to build and upload programs to a microcontroller.
 I highly recommend using the PIO IDE or at least the PIO build-system to upload the program to your Arduino/Teensy.
 
 
-# Configuration
+## Configuration
 
 Most configuration is located in the `config.h` file.
 
@@ -72,7 +77,7 @@ Aspects that have to be configured:
 | Pin Map                    | The PinMap is used for setting the IO pins, used in the MRIL I, O commands (I2 1 wait for pin 2:high, O7 0 set pin 7:low).  A PinMap {8, 3, 24}, maps the physical pins 8, 3, 24 to the logical pins 0, 1, 2.                                                                                                                                                                             |
 | Logical to Physical Angles | A method to transform logical to physical angles. (See section kinematics for more detail.) |
 
-# Servo Calibration
+## Servo Calibration
 The servos have to be calibrated to relate PWM pulses to physical robot positions. Therefore build and upload the `/examples/CalibrateServos.h` file.
 Open a serial monitor and connect to the microcontroller.
 Use the keys `0-9 to select a servo`. Press `n to move` a servo without changing the config.
@@ -108,13 +113,15 @@ does not move to 0° according to the above diagram, adjust the angles or PWM va
  PRINT_HELP 'h'
 ```
 
-# Kinematics Logical - Physical Angles
+## Kinematics Logical - Physical Angles
 The MRC uses two types of angles - logical and physical angles.
 Logical joint angles are used internally by the robot controller and are the result of the IK calculation. The robot is therefore modeled as a series of joints and links. However, a real physical robot may use mechanical links to move some axis. Therefore moving R1 may also move R2, because of the kinematic linking.
 
 To account for mechanical kinematics, the methods logicalToPhysicalAngles and physicalToLogicalAngles are used.
 On the robot depicted below, both motors for J1 and J2 are at the position of J1. A link is used to drive J2.
 Therefore moving only R1 also decreases the angle of J2. To not move J2, R2 has to move the same amount as R1.
+
+<img width="1151" alt="bildschirmfoto 2017-05-15 um 12 13 07" src="https://cloud.githubusercontent.com/assets/3062564/26053118/e25bf600-3967-11e7-90ac-8fb8fd248fc0.png">
 
 This is represented using the methods like this:
 
@@ -128,14 +135,14 @@ void physicalToLogicalAngles(float angles[6]) {
 }
 ```
 
-# Tests
+## Tests
 For testing and mocking gMock/gTest is used.
 To run the tests `/tests/test.h`.
 
-# Debug
+## Debug
 increase the log-level in `Logger.cpp` to see whats happening in the controller.
 
-# todo
+## todo
 + implement circular interpolation methods
 + implement proper logging
 + dependency inject the logger
