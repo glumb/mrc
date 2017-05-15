@@ -1,4 +1,4 @@
-#include "MyServo.h"
+#include "VarSpeedServo.h"
 
 #include <util/atomic.h>
 #include "Logger.h"
@@ -6,14 +6,14 @@
 #include "Arduino.h"
 
 namespace {
-Logger logger("MyServo");
+Logger logger("VarSpeedServo");
 }
 
 
 /**
  *
  */
-MyServo::MyServo(int          pinNumber,
+VarSpeedServo::VarSpeedServo(int          pinNumber,
                  float        maxAngleVelocity,
                  unsigned int minFreq,
                  unsigned int maxFreq,
@@ -57,15 +57,15 @@ MyServo::MyServo(int          pinNumber,
     this->move(); // drive to 0 position according to min max angle
 }
 
-float MyServo::getHomeRadAngle() {
+float VarSpeedServo::getHomeRadAngle() {
     return this->homeAngle;
 }
 
-int MyServo::getPinNumber() {
+int VarSpeedServo::getPinNumber() {
     return this->pinNumber;
 }
 
-void MyServo::setAngleLimits(float minRadAngle, float maxRadAngle) {
+void VarSpeedServo::setAngleLimits(float minRadAngle, float maxRadAngle) {
     if (minRadAngle > maxRadAngle) {
         logger.error("minAngle must be smaller than maxAngle on servo_num: " + String(this->pinNumber) + " (min: " + String(
                          minRadAngle / PI * 180) + " max: " + String(maxRadAngle / PI * 180) + ")");
@@ -74,28 +74,28 @@ void MyServo::setAngleLimits(float minRadAngle, float maxRadAngle) {
     this->maxRadAngle = maxRadAngle;
 }
 
-float MyServo::getMinRadAngle() {
+float VarSpeedServo::getMinRadAngle() {
     return this->minRadAngle;
 }
 
-float MyServo::getMaxRadAngle() {
+float VarSpeedServo::getMaxRadAngle() {
     return this->maxRadAngle;
 }
 
-void MyServo::setCalibrationFreq(unsigned int minFreq, unsigned int maxFreq) {
+void VarSpeedServo::setCalibrationFreq(unsigned int minFreq, unsigned int maxFreq) {
     this->minFreq = minFreq;
     this->maxFreq = maxFreq;
 }
 
-unsigned int MyServo::getMinFreq() {
+unsigned int VarSpeedServo::getMinFreq() {
     return this->minFreq;
 }
 
-unsigned int MyServo::getMaxFreq() {
+unsigned int VarSpeedServo::getMaxFreq() {
     return this->maxFreq;
 }
 
-float MyServo::getCurrentAngle() { // physical angle
+float VarSpeedServo::getCurrentAngle() { // physical angle
     float result;
 
     // std::cout << "getCurrentAngle "<<currentAngle << '\n';
@@ -108,21 +108,21 @@ float MyServo::getCurrentAngle() { // physical angle
     return result;
 }
 
-void MyServo::setTargetRadAngle(float angleRad) {
+void VarSpeedServo::setTargetRadAngle(float angleRad) {
     this->startAngle  = this->currentAngle;
     this->elapsedTime = 0;
     this->targetAngle = angleRad;
 }
 
-void MyServo::setFreqency(long microseconds) {
+void VarSpeedServo::setFreqency(long microseconds) {
     if (!this->virtualServo) this->servo.writeMicroseconds(microseconds);
 }
 
-float MyServo::getTargetRadAngle() {
+float VarSpeedServo::getTargetRadAngle() {
     return this->targetAngle;
 }
 
-void MyServo::setCurrentAngleVelocity(float angleRadVelocity) {
+void VarSpeedServo::setCurrentAngleVelocity(float angleRadVelocity) {
     if (angleRadVelocity > this->maxAngleVelocity) {
         this->currentAngleVelocity = this->maxAngleVelocity;
     } else if (angleRadVelocity <= 0) {
@@ -132,15 +132,15 @@ void MyServo::setCurrentAngleVelocity(float angleRadVelocity) {
     }
 }
 
-float MyServo::getCurrentAngleVelocity() {
+float VarSpeedServo::getCurrentAngleVelocity() {
     return this->currentAngleVelocity;
 }
 
-float MyServo::getMaxAngleVelocity() {
+float VarSpeedServo::getMaxAngleVelocity() {
     return this->maxAngleVelocity;
 }
 
-void MyServo::process(unsigned int deltaT) {
+void VarSpeedServo::process(unsigned int deltaT) {
     // v = s/t
     this->elapsedTime += deltaT;
 
@@ -166,11 +166,11 @@ void MyServo::process(unsigned int deltaT) {
 
 }
 
-bool MyServo::atTargetAngle() {
+bool VarSpeedServo::atTargetAngle() {
     return fabs(this->currentAngle - this->targetAngle) < 0.000001;
 }
 
-void MyServo::move() {
+void VarSpeedServo::move() {
     unsigned int freq = int(
         this->map_float(this->currentAngle, this->minRadAngle, this->maxRadAngle, this->minFreq, this->maxFreq)
         );
@@ -178,11 +178,11 @@ void MyServo::move() {
     if (!this->virtualServo) this->servo.writeMicroseconds(freq);
 }
 
-float MyServo::map_float(float x, float in_min, float in_max, float out_min, float out_max)
+float VarSpeedServo::map_float(float x, float in_min, float in_max, float out_min, float out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-bool MyServo::getOutOfRange() {
+bool VarSpeedServo::getOutOfRange() {
     return this->outOfRange;
 }

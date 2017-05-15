@@ -44,7 +44,7 @@ Logger logger("RobotController");
 
 #define DOTVP(v, u) ((v)[0] * (u)[0] + (v)[1] * (u)[1] + (v)[2] * (u)[2])
 
-RobotController::RobotController(MyServo   *servos[],
+RobotController::RobotController(VarSpeedServo   *servos[],
                                  Kinematic& _Kinematic,
                                  float      lal[6][2],
                                  void(*_logicalToPhysicalAngles)(float[6]),

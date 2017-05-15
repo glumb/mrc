@@ -12,7 +12,7 @@ static SerialMock *serialMock = serialMockInstance();
 #include "../fake/Communication.h"
 
 #include "MRCPR.h"
-#include "MyServo.h"
+#include "VarSpeedServo.h"
 
 #include "Kinematic.h"
 
@@ -28,13 +28,13 @@ using ::testing::_;
 void l2p(float f[]) {}
 void p2l(float f[]) {}
 
-MyServo *servos[6] = {
-    new MyServo(1, 2, 3, 4, 5, 6, 7),
-    new MyServo(2, 2, 3, 4, 5, 6, 7),
-    new MyServo(3, 2, 3, 4, 5, 6, 7),
-    new MyServo(4, 2, 3, 4, 5, 6, 7),
-    new MyServo(5, 2, 3, 4, 5, 6, 7),
-    new MyServo(6, 2, 3, 4, 5, 6, 7)
+VarSpeedServo *servos[6] = {
+    new VarSpeedServo(1, 2, 3, 4, 5, 6, 7),
+    new VarSpeedServo(2, 2, 3, 4, 5, 6, 7),
+    new VarSpeedServo(3, 2, 3, 4, 5, 6, 7),
+    new VarSpeedServo(4, 2, 3, 4, 5, 6, 7),
+    new VarSpeedServo(5, 2, 3, 4, 5, 6, 7),
+    new VarSpeedServo(6, 2, 3, 4, 5, 6, 7)
 };
 
 float geo[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };

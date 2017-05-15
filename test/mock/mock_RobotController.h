@@ -2,7 +2,7 @@
 #define MOCK_ROBOT_CONTROLLER_H 1
 
 #include "gmock/gmock.h"
-#include "MyServo.h"
+#include "VarSpeedServo.h"
 #include "Kinematic.h"
 #include "RobotController.h"
 
@@ -10,7 +10,7 @@
 class mock_RobotController : public RobotController {
 public:
 
-    mock_RobotController(MyServo   *servos[],
+    mock_RobotController(VarSpeedServo   *servos[],
                          Kinematic& Kin,
                          float      logicalAngleLimits[6][2],
                          void(*_logicalToPhysicalAngles)(float[6]),

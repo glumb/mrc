@@ -18,7 +18,7 @@
 #define MOCK_VIRTUAL
 #endif
 
-#include "MyServo.h"
+#include "VarSpeedServo.h"
 #include "Kinematic.h"
 
 # define NUMBER_OF_AXIS 6
@@ -26,7 +26,7 @@
 class RobotController {
 public:
 
-    RobotController(MyServo   *servos[],
+    RobotController(VarSpeedServo   *servos[],
         Kinematic &_Kinematic,
         float logicalAngleLimits[6][2],
         void(*_logicalToPhysicalAngles)(float[6]),
@@ -116,7 +116,7 @@ private:
 
 
     Kinematic &_Kinematic;
-    MyServo *Servos[6];
+    VarSpeedServo *Servos[6];
     void (*logicalToPhysicalAngles )(float[6]);
     void (*physicalToLogicalAngles )(float[6]);
 

@@ -18,7 +18,7 @@ static SerialMock *serialMock = serialMockInstance();
 #include "EEPromStorage.h"
 #include "RingBuffer.h"
 #include "MRCPR.h"
-#include "MyServo.h"
+#include "VarSpeedServo.h"
 
 #include "Kinematic.h"
 
@@ -44,12 +44,12 @@ protected:
     virtual void SetUp() {
         K = new Kinematic(geo);
 
-        servos[0] = new MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[1] = new MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[2] = new MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[3] = new MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[4] = new MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[5] = new MyServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[0] = new VarSpeedServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[1] = new VarSpeedServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[2] = new VarSpeedServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[3] = new VarSpeedServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[4] = new VarSpeedServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[5] = new VarSpeedServo(1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
 
 
         R = new mock_RobotController(servos, *K, logicalAngleLimits, l2p, p2l);
@@ -80,14 +80,14 @@ protected:
         { -180 * DEG_TO_RAD, 180 * DEG_TO_RAD }
     };
 
-    // MyServo(int          pinNumber,
+    // VarSpeedServo(int          pinNumber,
     //         float        maxAngleVelocity,
     //         unsigned int minFreq,
     //         unsigned int maxFreq,
     //         float        minRadAngle,
     //         float        maxRadAngle,
     //         float        homeRadAngle = 0);
-    MyServo *servos[6];
+    VarSpeedServo *servos[6];
 
     Kinematic *K;
     mock_RobotController *R;
@@ -101,12 +101,12 @@ protected:
     RingBuffer Ringbuffer { 200 };
 };
 
-static void helper_processServos(MyServo *servos[6]) {
+static void helper_processServos(VarSpeedServo *servos[6]) {
   for (size_t i = 0; i < 6; i++) {
     servos[i]->process(1000000); // set to target
   }
 }
-static void helper_moveToTargetPose(RobotController *R, MyServo *servos[6]) {
+static void helper_moveToTargetPose(RobotController *R, VarSpeedServo *servos[6]) {
     while (R->isMoving()) { // move to pose
         R->process();
         helper_processServos(servos);

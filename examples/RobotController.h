@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "../src/RobotController.h"
-#include "../src/MyServo.h"
+#include "../src/VarSpeedServo.h"
 #include "../src/Kinematic.h"
 #include "TimerOne.h"
 
@@ -41,7 +41,7 @@ float geometry[5][3] = {
 };
 
 RobotController *_RobotController;
-MyServo  *servos[6];
+VarSpeedServo  *servos[6];
 Kinematic Kinematic(geometry);
 
 void logicalToPhysicalAngles(float angles[6]) {
@@ -68,7 +68,7 @@ void setup()
     delay(4000);
 
     for (size_t i = 0; i < 6; i++) {
-        servos[i] = new MyServo(servoConfig[i][0],
+        servos[i] = new VarSpeedServo(servoConfig[i][0],
                                 servoConfig[i][1],
                                 servoConfig[i][2],
                                 servoConfig[i][3],

@@ -5,7 +5,7 @@
 // #include "MRCPParser.h"
 // #include "RingBuffer.h"
 // #include "MRILParser.h"
-// #include "MyServo.h"
+// #include "VarSpeedServo.h"
 // #include "Kinematic.h"
 // #include "RobotController.h"
 // #include "Display.h"
@@ -109,13 +109,13 @@
 //     Serial.println("MRILPARSER:");
 //     Serial.println("okokok");
 //
-//     MyServo *servos[6];
-//     servos[0] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     servos[1] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     servos[2] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     servos[3] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     servos[4] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-//     servos[5] = new MyServo(1, 2, 3, 4, 5, 6, 7);
+//     VarSpeedServo *servos[6];
+//     servos[0] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
+//     servos[1] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
+//     servos[2] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
+//     servos[3] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
+//     servos[4] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
+//     servos[5] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
 //
 //     float geo[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
 //     Kinematic K(geo);
@@ -144,9 +144,9 @@
 // //     Serial.println("MRILPARSER:");
 // //     Serial.println("okokok");
 // //
-// //     MyServo *servos[2];
-// //     servos[0] = new MyServo(1, 2, 3, 4, 5, 6, 7);
-// //     servos[1] = new MyServo(1, 2, 3, 4, 5, 6, 7);
+// //     VarSpeedServo *servos[2];
+// //     servos[0] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
+// //     servos[1] = new VarSpeedServo(1, 2, 3, 4, 5, 6, 7);
 // //     Kinematic *K;
 // //     float geo[5][3] = { { 3.5, 8.5, 0 }, { 0, 11.6, 0 }, { 1.4, 1.5, 0 }, { 12, 0, 0 }, { 0, -5, 0 } };
 // //     K = new Kinematic(geo);

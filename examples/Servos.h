@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../src/MyServo.h"
+#include "../src/VarSpeedServo.h"
 #include "TimerOne.h"
 
 
@@ -21,7 +21,7 @@ const float servoConfig[6][7] = {
     { pin_servo_5,  150 * DEG_TO_RAD,  740.00, 2200.00,  -90.00 * DEG_TO_RAD,  60.00 * DEG_TO_RAD, 0 }
 };
 
-MyServo *servos[6];
+VarSpeedServo *servos[6];
 
 
 void updateServos() {
@@ -35,7 +35,7 @@ void setup()
     Serial.begin(9600);
 
     for (size_t i = 0; i < 6; i++) {
-        servos[i] = new MyServo(servoConfig[i][0],
+        servos[i] = new VarSpeedServo(servoConfig[i][0],
                                 servoConfig[i][1],
                                 servoConfig[i][2],
                                 servoConfig[i][3],

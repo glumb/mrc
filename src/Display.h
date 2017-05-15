@@ -172,7 +172,7 @@ public:
     }
 
     // values {min valuetarget valuecurrent max}
-    void displayBars(unsigned int x, unsigned int y, unsigned int width, unsigned int height, MyServo *servos[]) {
+    void displayBars(unsigned int x, unsigned int y, unsigned int width, unsigned int height, VarSpeedServo *servos[]) {
         for (size_t i = 0; i < 6; i++) {
             // float range        = servos[i]->getCurrentAngle() - servos[i]->getMinRadAngle();
             int neutral = (int)map_float2(servos[i]->getHomeRadAngle(), servos[i]->getMinRadAngle(), servos[i]->getMaxRadAngle(), 0, width);

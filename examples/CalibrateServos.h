@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../src/MyServo.h"
+#include "../src/VarSpeedServo.h"
 #include "TimerOne.h"
 
 // use w: up, s: down, d: print, q: goto 0 angle, e,r,t,z:set min_max_angle_freq
@@ -25,7 +25,7 @@ mode MODE = CALIBRATE;
 
 void printHelp();
 
-MyServo *servos[6];
+VarSpeedServo *servos[6];
 
 #define SERVOMIN  200  // usually 1000us
 #define SERVOMAX  2800 // usually 2000us
@@ -72,7 +72,7 @@ void setup()
     printHelp();
 
     for (size_t i = 0; i < 6; i++) {
-        servos[i] = new MyServo(tmpServoConfig[i][0],
+        servos[i] = new VarSpeedServo(tmpServoConfig[i][0],
                                 100, // velocity
                                 tmpServoConfig[i][2],
                                 tmpServoConfig[i][3],

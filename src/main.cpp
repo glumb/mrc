@@ -8,7 +8,7 @@
 
 # include "config.h"
 # include <Arduino.h>
-# include "MyServo.h"
+# include "VarSpeedServo.h"
 # include "TimerOne.h"
 # include "Kinematic.h"
 # include "Logger.h"
@@ -41,7 +41,7 @@
 void updateServos();
 void onIncomingData(char c);
 
-MyServo   *servos[8];
+VarSpeedServo   *servos[8];
 Kinematic *Kin;
 Display    Display;
 
@@ -83,7 +83,7 @@ void setup()
     // --- init servos ---
 
     for (size_t i = 0; i < 6; i++) {
-        servos[i] = new MyServo(servoConfig[i][0],
+        servos[i] = new VarSpeedServo(servoConfig[i][0],
                                 servoConfig[i][1],
                                 servoConfig[i][2],
                                 servoConfig[i][3],
@@ -97,7 +97,7 @@ void setup()
 
     // additional axis
     for (size_t i = 0; i < 2; i++) {
-        servos[i + 6] = new MyServo(additionalAxisServoConfig[i][0],
+        servos[i + 6] = new VarSpeedServo(additionalAxisServoConfig[i][0],
                                     additionalAxisServoConfig[i][1],
                                     additionalAxisServoConfig[i][2],
                                     additionalAxisServoConfig[i][3],

@@ -5,7 +5,7 @@ class AdditionalAxisController {
 public:
 
     // todo convert velocity from deg to rad
-    explicit AdditionalAxisController(MyServo *Servos[2]) {
+    explicit AdditionalAxisController(VarSpeedServo *Servos[2]) {
         for (size_t i = 0; i < 2; i++) {
             this->servos[i] = Servos[i];
         }
@@ -27,7 +27,7 @@ public:
 
 private:
 
-    MyServo *servos[2];
+    VarSpeedServo *servos[2];
 };
 
 #endif // ifndef ADDITIONAL_AXIS_CONTROLLER_H

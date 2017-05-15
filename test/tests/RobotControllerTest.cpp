@@ -4,8 +4,8 @@
 #include "Arduino.h"
 
 #include "../fake/Servo.h"
-#include "mock_MyServo.h"
-#include "MyServo.h"
+#include "mock_VarSpeedServo.h"
+#include "VarSpeedServo.h"
 
 #include "Kinematic.h"
 
@@ -54,24 +54,24 @@ protected:
         { -180 * DEG_TO_RAD, 180 * DEG_TO_RAD }
     };
 
-    MyServo *servos[6];
-    mock_MyServo mock_servos[6];
+    VarSpeedServo *servos[6];
+    mock_VarSpeedServo mock_servos[6];
     Kinematic *K;
     RobotController *R;
 };
 
-class RobotControllerTest_MyServo : public ::testing::Test {
+class RobotControllerTest_VarSpeedServo : public ::testing::Test {
 protected:
 
     virtual void SetUp() {
         K = new Kinematic(geo);
 
-        servos[0] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[1] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[2] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[3] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[4] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
-        servos[5] = new MyServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[0] = new VarSpeedServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[1] = new VarSpeedServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[2] = new VarSpeedServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[3] = new VarSpeedServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[4] = new VarSpeedServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
+        servos[5] = new VarSpeedServo( 1, 100, 500, 1000, -180 * DEG_TO_RAD, 180 * DEG_TO_RAD, 0);
 
         R = new RobotController(servos, *K, logicalAngleLimits, l2p, p2l);
     }
@@ -99,20 +99,20 @@ protected:
         { -180 * DEG_TO_RAD, 180 * DEG_TO_RAD }
     };
 
-    // MyServo(int          pinNumber,
+    // VarSpeedServo(int          pinNumber,
     //         float        maxAngleVelocity,
     //         unsigned int minFreq,
     //         unsigned int maxFreq,
     //         float        minRadAngle,
     //         float        maxRadAngle,
     //         float        homeRadAngle = 0);
-    MyServo *servos[6];
+    VarSpeedServo *servos[6];
 
     Kinematic *K;
     RobotController *R;
 };
 
-void helper_processServos(MyServo *servos[6]);
+void helper_processServos(VarSpeedServo *servos[6]);
 
 void helper_eulerToVector(float euler[3], float vector[3]) {
     float cc = cos(euler[2]);
@@ -127,7 +127,7 @@ void helper_eulerToVector(float euler[3], float vector[3]) {
     vector[2] = ca * cb;
 }
 
-void helper_moveToTargetPose(RobotController *R, MyServo *servos[6]) {
+void helper_moveToTargetPose(RobotController *R, VarSpeedServo *servos[6]) {
     while (R->isMoving()) { // move to pose
         R->process();
         helper_processServos(servos);
@@ -146,13 +146,13 @@ void EULER_EQUALS(float euler1[3], float euler2[3]) {
     EXPECT_NEAR(vector2[2], vector1[2], 1e-5);
 }
 
-void helper_processServos(MyServo *servos[6]) {
+void helper_processServos(VarSpeedServo *servos[6]) {
     for (size_t i = 0; i < 6; i++) {
         servos[i]->process(1000000); // set to target
     }
 }
 
-TEST_F(RobotControllerTest_MyServo, test) {
+TEST_F(RobotControllerTest_VarSpeedServo, test) {
     R->setTargetPose(1, 2, 3, 4, 5, 6);
 
 
@@ -185,7 +185,7 @@ TEST_F(RobotControllerTest_MockServo, Transaction) {
     R->process();
 }
 
-TEST_F(RobotControllerTest_MyServo, stop) {
+TEST_F(RobotControllerTest_VarSpeedServo, stop) {
     R->setTargetLogicalAngle(0, 45 * DEG_TO_RAD);
     R->process();
 
@@ -196,7 +196,7 @@ TEST_F(RobotControllerTest_MyServo, stop) {
     EXPECT_FALSE(R->isMoving());
 }
 
-TEST_F(RobotControllerTest_MyServo, MovementMethod) {
+TEST_F(RobotControllerTest_VarSpeedServo, MovementMethod) {
     R->setMovementMethod(RobotController::MOVEMENT_METHODS::LINEAR);
     float pose[6];
     R->getCurrentPose(pose);
@@ -270,7 +270,7 @@ TEST_F(RobotControllerTest_MyServo, MovementMethod) {
     EXPECT_FALSE(R->isMoving());
 }
 
-TEST_F(RobotControllerTest_MyServo, getCurrentPose) {
+TEST_F(RobotControllerTest_VarSpeedServo, getCurrentPose) {
     R->setTargetPose(10, 10, 10, 0, PI, 0);
     R->process();
     helper_processServos(servos);
@@ -298,10 +298,10 @@ TEST_F(RobotControllerTest_MockServo, getCurrentPose) {
     R->getCurrentPose(pose);
 }
 
-TEST_F(RobotControllerTest_MyServo, setTargetPose) {}
-TEST_F(RobotControllerTest_MyServo, getCurrentLogicalAngles) {}
-TEST_F(RobotControllerTest_MyServo, getCurrentLogicalAngle) {}
-TEST_F(RobotControllerTest_MyServo, setTargetLogicalAngles) {
+TEST_F(RobotControllerTest_VarSpeedServo, setTargetPose) {}
+TEST_F(RobotControllerTest_VarSpeedServo, getCurrentLogicalAngles) {}
+TEST_F(RobotControllerTest_VarSpeedServo, getCurrentLogicalAngle) {}
+TEST_F(RobotControllerTest_VarSpeedServo, setTargetLogicalAngles) {
     float angles[6] = {
         90 * DEG_TO_RAD,
         110 * DEG_TO_RAD,
@@ -323,7 +323,7 @@ TEST_F(RobotControllerTest_MyServo, setTargetLogicalAngles) {
     EXPECT_NEAR(angles[4], currentAngles[4], 1e-5);
     EXPECT_NEAR(angles[5], currentAngles[5], 1e-5);
 }
-TEST_F(RobotControllerTest_MyServo, setTargetLogicalAnglesMovePastsingularity) {
+TEST_F(RobotControllerTest_VarSpeedServo, setTargetLogicalAnglesMovePastsingularity) {
     float angles[6] = {
         0,
         0,
@@ -366,13 +366,13 @@ TEST_F(RobotControllerTest_MyServo, setTargetLogicalAnglesMovePastsingularity) {
     EXPECT_NEAR(angles2[4], currentAngles2[4], 1e-5);
     EXPECT_NEAR(angles2[5], currentAngles2[5], 1e-5);
 }
-TEST_F(RobotControllerTest_MyServo, setTargetLogicalAngle) {
+TEST_F(RobotControllerTest_VarSpeedServo, setTargetLogicalAngle) {
     R->setTargetLogicalAngle(3, 42 * DEG_TO_RAD);
     helper_moveToTargetPose(R, servos);
 
     EXPECT_NEAR(R->getCurrentLogicalAngle(3), 42 * DEG_TO_RAD, 1e-7);
 }
-TEST_F(RobotControllerTest_MyServo, getTargetLogicalAngles) {
+TEST_F(RobotControllerTest_VarSpeedServo, getTargetLogicalAngles) {
     float angles[6] = {
         13,
         99,
@@ -394,12 +394,12 @@ TEST_F(RobotControllerTest_MyServo, getTargetLogicalAngles) {
     EXPECT_NEAR(angles[4], currentAngles[4], 1e-5);
     EXPECT_NEAR(angles[5], currentAngles[5], 1e-5);
 }
-TEST_F(RobotControllerTest_MyServo, getTargetLogicalAngle) {
+TEST_F(RobotControllerTest_VarSpeedServo, getTargetLogicalAngle) {
     R->setTargetLogicalAngle(3, 42 * DEG_TO_RAD);
 
     EXPECT_NEAR(R->getTargetLogicalAngle(3), 42 * DEG_TO_RAD, 1e-7);
 }
-TEST_F(RobotControllerTest_MyServo, getCurrentPhysicalAngles) {
+TEST_F(RobotControllerTest_VarSpeedServo, getCurrentPhysicalAngles) {
     float currentAngles[6];
 
     R->getCurrentPhysicalAngles(currentAngles);
@@ -411,7 +411,7 @@ TEST_F(RobotControllerTest_MyServo, getCurrentPhysicalAngles) {
     EXPECT_NEAR(0, currentAngles[4], 1e-5);
     EXPECT_NEAR(0, currentAngles[5], 1e-5);
 }
-TEST_F(RobotControllerTest_MyServo, getCurrentPhysicalAngle) {
+TEST_F(RobotControllerTest_VarSpeedServo, getCurrentPhysicalAngle) {
     EXPECT_NEAR(R->getCurrentPhysicalAngle(1), 0 * DEG_TO_RAD, 1e-7);
 }
 
@@ -423,7 +423,7 @@ void physical2logical(float angles[6]) {
     angles[2] -= angles[1];
 }
 
-TEST_F(RobotControllerTest_MyServo, LogicalPhysicalAngles) {
+TEST_F(RobotControllerTest_VarSpeedServo, LogicalPhysicalAngles) {
     RobotController *Rob;
 
     Rob = new RobotController(servos, *K, logicalAngleLimits, logical2physical, physical2logical);
@@ -460,9 +460,9 @@ TEST_F(RobotControllerTest_MyServo, LogicalPhysicalAngles) {
     EXPECT_NEAR(servos[4]->getCurrentAngle(), physicalAngles[4], 1e-5);
     EXPECT_NEAR(servos[5]->getCurrentAngle(), physicalAngles[5], 1e-5);
 }
-TEST_F(RobotControllerTest_MyServo, getTargetPhysicalAngle) {}
-TEST_F(RobotControllerTest_MyServo, isMoving) {}
-TEST_F(RobotControllerTest_MyServo, process) {}
+TEST_F(RobotControllerTest_VarSpeedServo, getTargetPhysicalAngle) {}
+TEST_F(RobotControllerTest_VarSpeedServo, isMoving) {}
+TEST_F(RobotControllerTest_VarSpeedServo, process) {}
 
 
 float length3(float vector[3]) {
@@ -514,7 +514,7 @@ void EXPECT_IN_PLANE(float vectors[][3], int length) {
     }
 }
 
-TEST_F(RobotControllerTest_MyServo, linearTransitionBetweenPoses) {
+TEST_F(RobotControllerTest_VarSpeedServo, linearTransitionBetweenPoses) {
     float vectors[][3] = {
         {  1,      0, 0 },
         {  1,   -7.4, 0 },

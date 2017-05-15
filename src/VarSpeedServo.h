@@ -11,10 +11,10 @@
 
 #define DELTA_T 15 // go at 66hz to best match the servo freq
 
-class MyServo {
+class VarSpeedServo {
 public:
 
-    MyServo(int          pinNumber,
+    VarSpeedServo(int          pinNumber,
             float        maxAngleVelocity,
             unsigned int minFreq,
             unsigned int maxFreq,

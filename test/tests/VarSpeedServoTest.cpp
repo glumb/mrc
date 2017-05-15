@@ -5,20 +5,20 @@
 
 #include "../fake/Servo.h"
 
-#include "MyServo.h"
+#include "VarSpeedServo.h"
 
 
 
-TEST(MyServoTest, testPinNumber)
+TEST(VarSpeedServoTest, testPinNumber)
 {
-    MyServo S(1, 2, 3, 4, 5, 6);
+    VarSpeedServo S(1, 2, 3, 4, 5, 6);
 
     EXPECT_EQ(S.getPinNumber(), 1);
 }
 
-TEST(MyServoTest, maxAngle)
+TEST(VarSpeedServoTest, maxAngle)
 {
-    MyServo S(1, 2, 3, 4, 5, 6);
+    VarSpeedServo S(1, 2, 3, 4, 5, 6);
 
     EXPECT_EQ(S.getMaxAngleVelocity(), 2);
 }
