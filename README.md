@@ -6,10 +6,11 @@
 [![Travis](https://img.shields.io/travis/glumb/mrcl.svg)](https://travis-ci.org/glumb/mrc)
 
 micropede robot controller 🤖🖥👾
+
 Zu den Robotern [hier entlang](https://micropede.de/shop#filter=.robot).
 
 This project is work in progress.
-Feel free to fork update and improve it 😃
+Feel free to fork, update and improve it 😃
 
 All configurations and settings are based on the robot model depiced below.
 
