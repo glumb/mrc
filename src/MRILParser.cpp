@@ -40,12 +40,16 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
     // todo use atomic instead to also not invoke timers when setting axis R0 R1 and so on....
     this->_RobotController.startTransaction();
 
-    for (size_t i = 0; i < length; i++) {                               // l:6 i:0    c:90
-        char c        = mrilInstruction[i];                             // i:1 c:51  - i:2 c:65
-        char nextChar = (i == length - 1) ? 3 : mrilInstruction[i + 1]; // ETX
+    for (size_t i = 0; i < length; i++) { // l:6 i:0    c:90
+        char c = mrilInstruction[i];      // i:1 c:51  - i:2 c:65
+        // char nextChar        = (i == length - 1) ? 3 : mrilInstruction[i + 1]; // ETX
+        bool commandFinished = (i == length - 1) ? true :
+                               ((mrilInstruction[i + 1] >= 65) && (mrilInstruction[i + 1] <= 90)) ? true :
+                               (mrilInstruction[i + 1] == '#' || mrilInstruction[i + 1] == '(');
 
-        if ((c == '#') || (c == '(')) {                                 // starting comment
-            break;                                                      // do not interpret any other symbols for this instruction
+        if ((c == '#') || (c == '(')) { // starting comment
+            Serial.println("comment-breaking");
+            break;                      // do not interpret any other symbols for this instruction
         }
 
 
@@ -68,7 +72,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
 
         // command finished, interpret it.
-        if (((nextChar >= 65) && (nextChar <= 90)) || (nextChar == 3)) {                    // is a character or end
+        if (commandFinished) {                                                              // is a character or end
             // no options means read command
             commandType = (commandPointer == 1) ? CommandTypes::READ : CommandTypes::WRITE; // todo make decision for individual symbol
 
@@ -213,24 +217,28 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
                 if ((commandType == CommandTypes::READ) || (commandPointer == 2)) { // is still read, when one option is present
                     commandType = CommandTypes::READ;
-                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_ROTATE) + String(option) +
-                                             String(this->_RobotController.getCurrentLogicalAngle(option) * RAD_TO_DEG));
+
+                    if (option >= 6) {
+                        this->_MRCPR.sendMessage(String(MRIL_COMMAND_ROTATE) + String(option) +
+                                                 String(this->_AdditionalAxisController.getCurrentAngle(option - 6) * RAD_TO_DEG));
+                    } else {
+                        this->_MRCPR.sendMessage(String(MRIL_COMMAND_ROTATE) + String(option) +
+                                                 String(this->_RobotController.getCurrentLogicalAngle(option) * RAD_TO_DEG));
+                    }
                 } else {
-                    int value = atoi(command + 2);
+                    float value = atof(command + 2);
 
                     _logger.info("Rotate R" + String(option) + " value " + String(value));
 
                     // _logger.info(String(value));
 
-                    this->_RobotController.setTargetLogicalAngle(option, value * DEG_TO_RAD);
 
                     if (option >= 6) {
                         this->_AdditionalAxisController.setAxisToAngle(option - 6, value / 180.0 * PI);
+                    } else {
+                        this->_RobotController.setTargetLogicalAngle(option, value * DEG_TO_RAD);
                     }
 
-                    // servos[option]->setTargetRadAngle(value / 180 * PI);
-
-                    // this->_RobotController.setAxisRotation(option,value);
                 }
                 break;
             }

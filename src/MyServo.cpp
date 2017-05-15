@@ -162,19 +162,8 @@ void MyServo::process(unsigned int deltaT) {
         }
     }
 
-    // if (abs(deltaAngle) > this->currentAngleVelocity * deltaTSeconds) {
-    //     if (deltaAngle > 0) {
-    //         this->currentAngle = this->currentAngle + this->currentAngleVelocity * deltaTSeconds;
-    //     } else {
-    //         this->currentAngle = this->currentAngle - this->currentAngleVelocity * deltaTSeconds;
-    //     }
-    // } else {
-    //     this->currentAngle = this->targetAngle;
-    // }
-
     this->move();
 
-    // }
 }
 
 bool MyServo::atTargetAngle() {
@@ -182,11 +171,6 @@ bool MyServo::atTargetAngle() {
 }
 
 void MyServo::move() {
-    // val = map(val, 0, 1023, 0, 180);     // scale it to use it with the servo (value between 0 and 180)
-    // Serial.print("angle ");
-    // logger.info(this->currentAngle/PI*180.0);
-
-    // add offset angle here, to move it at full speed, since its only used for kinemtic coupling of servos
     unsigned int freq = int(
         this->map_float(this->currentAngle, this->minRadAngle, this->maxRadAngle, this->minFreq, this->maxFreq)
         );

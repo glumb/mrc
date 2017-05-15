@@ -29,7 +29,7 @@ const  char MRIL_COMMAND_LOGIC_INPUT     = 'I';
 const  char MRIL_COMMAND_LOGIC_OUTPUT    = 'O';
 const  char MRIL_COMMAND_SERIAL_IO       = 'U';
 
-const  char MRIL_COMMAND_WAIT = 'W';
+const  char MRIL_COMMAND_WAIT = 'D';
 
 const  char MRIL_COMMAND_TEST = 'F';
 

@@ -442,6 +442,8 @@ void RobotController::process() {
 
         if (this->targetPoseChanged && this->targetAnglesChanged) {
             logger.error("Do not change pose and angles in one transaction!");
+            this->targetAnglesChanged = false;
+            this->targetPoseChanged   = false;
             this->state = IDLE;
             return;
         }

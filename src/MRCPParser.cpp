@@ -16,7 +16,11 @@ MRCPParser::MRCPParser(EEPromStorage& _EEPromStorage,
     _EEPromStorage(_EEPromStorage),
     _RingBuffer(_RingBuffer),
     _MRILParser(_MRILParser),
-    _MRCPR(_MRCPR) {}
+    _MRCPR(_MRCPR) {
+    if (this->_EEPromStorage.getNumberOfMessages() > 0) {
+        this->mrcpMode = MRCPMODE::EEPROM;
+    }
+}
 
 void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     if (length == 0) { // dont parse an empty command
@@ -24,10 +28,17 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     }
 
     switch (buffer[0]) {
+    case MRCP_GET_BUFFER_SIZE:
+    {
+        this->sendFreeBufferSize();
+
+        break;
+    }
+
     case MRCP_COMMAND_EXECUTE:
     {
         this->mrcpMode = MRCPMODE::EXECUTE;
-        _MRILParser.parse(buffer + 1, length - 1); // queue in MRIL minus MRCP command
+        _MRILParser.parse(buffer + 1, length - 1);
 
         break;
     }
@@ -35,8 +46,8 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
     case MRCP_COMMAND_QUEUE_IN:
     {
         this->mrcpMode = MRCPMODE::QUEUE;
-        unsigned int status;                                   // todo put in class
-        status = _RingBuffer.putBytes(buffer + 1, length - 1); // queu in MRIL minus MRCP command
+        unsigned int status;
+        status = _RingBuffer.putBytes(buffer + 1, length - 1); // queue in MRIL minus MRCP command
 
         if (status == RingBuffer::STATUS_FULL) {
             logger.warning("buffer full");
@@ -49,16 +60,15 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
     case MRCP_COMMAND_WRITE:
     {
-        this->mrcpMode = MRCPMODE::EEPROM;
-        unsigned int status;                                   // todo put in class
-        status = _RingBuffer.putBytes(buffer + 1, length - 1); // queu in MRIL minus MRCP command
-
-        if (status == RingBuffer::STATUS_FULL) {
-            logger.warning("buffer full");
+        if (length == 1) {
+            _EEPromStorage.clear();
+            logger.info("clearing eeprom");
+            Serial.println("clearing eeprom");
         } else {
-            logger.info("command in buffer");
+            logger.info("writing to eeprom");
+            this->mrcpMode = MRCPMODE::EEPROM;
+            _EEPromStorage.appendMessage(buffer + 1, length - 1); // queue in MRIL minus MRCP command
         }
-
         break;
     }
 
@@ -100,9 +110,9 @@ void MRCPParser::parseChar(char incomingByte) {
     }
 
     if (frameStarted) {
-        if (incomingByte == MRCP_START_FRAME) {
-            // dont save the start byte
-        } else if (incomingByte == MRCP_END_FRAME) { // message complete. write to messagequeue
+        static bool isComment = false;
+
+        if (incomingByte == MRCP_END_FRAME) { // message complete. write to messagequeue
             // logger.time("beforeee parseCommand");
             logger.info("Frame end");
             inputByteBuffer[inputByteBufferPointer + 1] = 0;
@@ -113,6 +123,12 @@ void MRCPParser::parseChar(char incomingByte) {
             if (!inputBufferFull) parseCommand(inputByteBuffer, inputByteBufferPointer);
             frameStarted    = false;
             inputBufferFull = false;
+            isComment = false;
+        } else if ((incomingByte == '#') || (incomingByte == '(') || isComment) { // dont parse symbols after comment. Order matters. EndByte has to be parsed
+          logger.info("isComment: "+String(incomingByte));
+            isComment = true;
+        } else if (incomingByte == MRCP_START_FRAME) {
+            // dont save the start byte
         } else if (((incomingByte >= 48) && (incomingByte <= 57)) || // numbers
                    ((incomingByte >= 65) && (incomingByte <= 90)) || // letters
                    ((incomingByte >= 43) && (incomingByte <= 46)))   // + . , -
@@ -122,8 +138,6 @@ void MRCPParser::parseChar(char incomingByte) {
 
             // say what you got:
             // logger.info("I received: " +String((char)incomingByte)+" ["+String(incomingByte)+"]");
-            // logger.info();
-            // logger.info(String(incomingByte));
 
             if (inputByteBufferPointer >= INPUT_BUFFER_SIZE) { // ge because we need a null for last char
                 // frame too long
@@ -132,7 +146,7 @@ void MRCPParser::parseChar(char incomingByte) {
                                    inputByteBufferPointer) + " size: " + String(INPUT_BUFFER_SIZE) + " (frame too long)");
             }
         } else {
-            //  logger.info("I received unknow char: " +String((char)incomingByte)+" ["+String(incomingByte)+"]");
+            logger.info("I received unknow char: " + String((char)incomingByte) + " [" + String(incomingByte) + "]");
         }
     }
 }
@@ -148,24 +162,33 @@ void MRCPParser::process() {
 
                     char mrilInstruction[INPUT_BUFFER_SIZE];
 
+                    this->sendFreeBufferSize();
                     char length = _RingBuffer.getMessage(mrilInstruction);
 
                     this->_MRILParser.parse(mrilInstruction, length);
-
-                    // Serial.println(String("$$") + _RingBuffer.getSize());
                 }
+                break;
+
+            case EEPROM:
+                char mrilInstruction[INPUT_BUFFER_SIZE];
+                char length = this->_EEPromStorage.getNextMessage(mrilInstruction);
+
+                if (length != 0) {
+                    this->_MRILParser.parse(mrilInstruction, length);
+                }
+
                 break;
             }
         }
     }
 }
 
-int MRCPParser::getBufferSize() {
-    return MRIL_BUFFER_SIZE;
+MRCPParser::MRCPMODE MRCPParser::getMode() {
+    return this->mrcpMode;
 }
 
-int MRCPParser::getFullBufferSize() {
-    return _RingBuffer.getSize();
+void MRCPParser::sendFreeBufferSize() {
+    this->_MRCPR.sendMessage(String(MRCP_GET_BUFFER_SIZE) + String(this->_RingBuffer.getCapacity() - this->_RingBuffer.getSize()));
 }
 
 char MRCPParser::toUpper(char ch1)

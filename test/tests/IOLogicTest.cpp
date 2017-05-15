@@ -9,41 +9,41 @@
 
 using ::testing::Return;
 
-// somehow expect pin to be set
+static unsigned int pinMap[10] = { 8, 11, 12, 7, 21, 1, 0, 0, 0, 0 };
 
 TEST(IOLogicTest, setOutput) {
     ArduinoMock *arduinoMock = arduinoMockInstance();
 
-    EXPECT_CALL(*arduinoMock, digitalWrite(8, HIGH));
-    EXPECT_CALL(*arduinoMock, pinMode(8, OUTPUT));
+    EXPECT_CALL(*arduinoMock, digitalWrite(7, HIGH));
+    EXPECT_CALL(*arduinoMock, pinMode(pinMap[3], OUTPUT));
 
-    IOLogic iol;
-    iol.setOutput(8, 1);
+    IOLogic iol(pinMap);
+    iol.setOutput(3, 1);
     releaseArduinoMock();
 }
 
-TEST(delay, waitForInput) {
+TEST(IOLogicTest, waitForInput) {
     ArduinoMock *arduinoMock = arduinoMockInstance();
 
-    EXPECT_CALL(*arduinoMock, digitalRead(6)).WillOnce(Return(1));
-    EXPECT_CALL(*arduinoMock, pinMode(6, INPUT));
+    EXPECT_CALL(*arduinoMock, digitalRead(pinMap[4])).WillOnce(Return(1));
+    EXPECT_CALL(*arduinoMock, pinMode(pinMap[4], INPUT_PULLDOWN));
 
-    IOLogic iol;
+    IOLogic iol(pinMap);
 
-    iol.addCondition(6, IOLogic::IO_HIGH);
+    iol.addCondition(4, IOLogic::IO_HIGH);
     EXPECT_EQ(iol.isDone(),true);
     releaseArduinoMock();
 }
 
-TEST(delay, waitForInputIsNotDone) {
+TEST(IOLogicTest, waitForInputIsNotDone) {
     ArduinoMock *arduinoMock = arduinoMockInstance();
 
-    EXPECT_CALL(*arduinoMock, digitalRead(6)).WillOnce(Return(1));
-    EXPECT_CALL(*arduinoMock, pinMode(6, INPUT));
+    EXPECT_CALL(*arduinoMock, digitalRead(pinMap[4])).WillOnce(Return(1));
+    EXPECT_CALL(*arduinoMock, pinMode(pinMap[4], INPUT_PULLUP));
 
-    IOLogic iol;
+    IOLogic iol(pinMap);
 
-    iol.addCondition(6, IOLogic::IO_LOW);
+    iol.addCondition(4, IOLogic::IO_LOW);
     EXPECT_EQ(iol.isDone(),false);
     releaseArduinoMock();
 }

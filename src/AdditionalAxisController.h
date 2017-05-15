@@ -15,6 +15,10 @@ public:
         this->servos[index]->setTargetRadAngle(angle);
     }
 
+    float getCurrentAngle(unsigned int index) {
+        return this->servos[index]->getCurrentAngle();
+    }
+
     void setVelocity(float velocity) {
         for (size_t i = 0; i < 2; i++) {
             this->servos[i]->setCurrentAngleVelocity(velocity);

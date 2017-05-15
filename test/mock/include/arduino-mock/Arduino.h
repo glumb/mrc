@@ -18,6 +18,7 @@ extern "C" {
 #define INPUT 0x0
 #define OUTPUT 0x1
 #define INPUT_PULLUP 0x2
+#define INPUT_PULLDOWN 0
 
 #ifdef WIN32
 #elif linux

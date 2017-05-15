@@ -8,12 +8,16 @@ namespace {
 Logger logger("IOLogic");
 }
 
-IOLogic::IOLogic() {}
-
 
 void IOLogic::addCondition(unsigned int pin, unsigned int state) {
-    pinAsInput(pin);
-    logger.info("setting pin as input " + String(pin));
+    logger.info("setting pin as input. logical " + String(pin) + " physical " + String(pinMap[pin]));
+    pin = pinMap[pin];
+
+    if (state == IOLogic::IO_HIGH) {
+        pinMode(pin, INPUT_PULLDOWN);
+    } else {
+        pinMode(pin, INPUT_PULLUP);
+    }
 
     this->conditionBuffer[this->conditionBufferLength][0] = pin;
     this->conditionBuffer[this->conditionBufferLength][1] = state;
@@ -21,6 +25,7 @@ void IOLogic::addCondition(unsigned int pin, unsigned int state) {
 }
 
 void IOLogic::setOutput(unsigned int pin, unsigned int state) {
+    pin = pinMap[pin];
     pinAsOutput(pin);
 
     logger.info("setting pin ");
@@ -39,7 +44,7 @@ void IOLogic::setOutput(unsigned int pin, unsigned int state) {
         break;
 
     default:
-        logger.warning("expected state [0,1], given: "+String(state));
+        logger.warning("expected state [0,1], given: " + String(state));
     }
 }
 
@@ -74,7 +79,7 @@ bool IOLogic::isDone()                                           {
                 break;
 
             default:
-                logger.warning("expected state [0,1], given: "+String(state));
+                logger.warning("expected state [0,1], given: " + String(state));
             }
         }
 
@@ -85,6 +90,8 @@ bool IOLogic::isDone()                                           {
 }
 
 unsigned int IOLogic::getTargetState(unsigned int pin) {
+    pin = pinMap[pin];
+
     for (size_t i = 0; i < this->conditionBufferLength; i++) {
         if (this->conditionBuffer[i][0] == pin) {
             return this->conditionBuffer[i][1];

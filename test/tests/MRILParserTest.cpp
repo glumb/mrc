@@ -49,13 +49,16 @@ float logicalAngleLimits[6][2] = {
     { -180 * DEG_TO_RAD, 180 * DEG_TO_RAD }
 };
 
+static unsigned int pinMap[10] = { 8, 11, 12, 7, 0, 1, 0, 0, 0, 0 };
+
 CommunicationInterface Com;
-IOLogic IO;
+IOLogic IO(pinMap);
 AdditionalAxisController A(servos);
 WaitController W;
 MRCPR Mrcpr(Com);
 
 using ::testing::_;
+
 
 TEST(MRILParserTest, setOutputToHigh)
 {
@@ -63,10 +66,10 @@ TEST(MRILParserTest, setOutputToHigh)
     MRILParser   MRILp(R, IO, A, W, Mrcpr);
     ArduinoMock *arduinoMock = arduinoMockInstance();
 
-    EXPECT_CALL(*arduinoMock, digitalWrite(8, HIGH));
-    EXPECT_CALL(*arduinoMock, pinMode(8, OUTPUT));
+    EXPECT_CALL(*arduinoMock, digitalWrite(pinMap[3], HIGH));
+    EXPECT_CALL(*arduinoMock, pinMode(pinMap[3], OUTPUT));
 
-    char instruction[3] = { 'O', '8', '1' };
+    char instruction[3] = { 'O', '3', '1' };
 
     MRILp.parse(instruction, 3);
 
@@ -79,10 +82,10 @@ TEST(MRILParserTest, waitForInput)
     MRILParser   MRILp(R, IO, A, W, Mrcpr);
     ArduinoMock *arduinoMock = arduinoMockInstance();
 
-    EXPECT_CALL(*arduinoMock, digitalRead(7));
-    EXPECT_CALL(*arduinoMock, pinMode(7, INPUT));
+    EXPECT_CALL(*arduinoMock, digitalRead(pinMap[4]));
+    EXPECT_CALL(*arduinoMock, pinMode(pinMap[4], INPUT));
 
-    char instruction[3] = { 'I', '7', '1' };
+    char instruction[3] = { 'I', '4', '1' };
 
     MRILp.parse(instruction, 3);
     MRILp.process();
@@ -307,7 +310,7 @@ TEST(MRILParserTest, setWait)
 
     EXPECT_TRUE(W.isDone());
 
-    char instruction[3] = { 'W', '4', '2' };
+    char instruction[3] = { 'D', '4', '2' };
     MRILp.parse(instruction, 3);
 
     EXPECT_FALSE(W.isDone());

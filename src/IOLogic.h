@@ -6,7 +6,7 @@
 class IOLogic {
 public:
 
-  IOLogic();
+  IOLogic(unsigned int (&pinMap)[10]):pinMap(pinMap){};
 
   static const unsigned int IO_HIGH = 1;
   static const unsigned int IO_LOW = 0;
@@ -24,6 +24,8 @@ public:
 private:
   unsigned int conditionBuffer[MAX_NUMBER_OF_PINS][2];
   unsigned int conditionBufferLength = 0;
+  // map physical pins to logic 0-9 pins
+  unsigned int (&pinMap)[10];
 };
 
 #endif

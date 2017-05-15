@@ -1,4 +1,4 @@
-// #define EXAMPLES 1
+// #define EXAMPLES 1 //uncomment to use examples
 #ifdef EXAMPLES
 
 // #include "../examples/Servos.h"
@@ -13,6 +13,7 @@
 # include "Kinematic.h"
 # include "Logger.h"
 # include "Display.h"
+# include "fastRW.h"
 
 # include "MRILParser.h"
 # include "RobotController.h"
@@ -32,6 +33,9 @@
 # define pin_scl  19 // SCK
 # define pin_latch  17
 
+# define pin_internal_led 13
+# define pin_servo_update_status_led 2
+
 # define RINGBUFFER_SIZE 300
 
 void updateServos();
@@ -43,7 +47,7 @@ Display    Display;
 
 MRILParser *Mrilparser;
 RobotController *RoboCon;
-IOLogic IOLogic;
+IOLogic IOLogic(pinMap);
 AdditionalAxisController *AxisController;
 WaitController WaitController;
 
@@ -58,7 +62,7 @@ RingBuffer    Ringbuffer(RINGBUFFER_SIZE);
 # define SERVOMIN  200  // usually 1000us
 # define SERVOMAX  2800 // usually 2000us
 
-# define updateServosEveryMs 15
+# define updateServosEveryMs 20
 
 namespace {
 Logger logger("main");
@@ -67,14 +71,14 @@ Logger logger("main");
 void setup()
 {
     Serial.begin(9600);
-
+// Eepromstorage.clear();
     // --- show start screen ---
     Display.begin();
     Display.clear();
     Display.displayText(0, 0, "STARTING");
     Display.displayRobotGeometry(geometry);
     Display.show();
-    delay(2000);
+    delay(1000);
 
     // --- init servos ---
 
@@ -107,7 +111,7 @@ void setup()
 
     Display.displayText(0, 8 * 1, "KIN");
     Display.show();
-    delay(500);
+    delay(100);
 
     // Robot Controller
     RoboCon = new RobotController(servos, *Kin, logicAngleLimits, logicalToPhysicalAngles, physicalToLogicalAngles); // todo make function
@@ -115,14 +119,14 @@ void setup()
 
     Display.displayText(0, 8 * 2, "Con");
     Display.show();
-    delay(500);
+    delay(100);
 
     // Additional Axis
     AxisController = new AdditionalAxisController(servos + 6);
 
     Display.displayText(0, 8 * 3, "Axis");
     Display.show();
-    delay(500);
+    delay(100);
 
     // MRIL Parser
     Mrilparser = new MRILParser(*RoboCon,
@@ -130,12 +134,18 @@ void setup()
                                 *AxisController,
                                 WaitController,
                                 Mrcpr);
+    Display.displayText(40, 8 * 1, "MRIL");
+    Display.show();
+    delay(100);
 
     // MRCP Parser
     Mrcpparser = new MRCPParser(Eepromstorage,
                                 Ringbuffer,
                                 *Mrilparser,
                                 Mrcpr);
+    Display.displayText(40, 8 * 2, "MRCP");
+    Display.show();
+    delay(100);
 
     // link MRCP to incoming data
     Serialio.onData(onIncomingData);
@@ -147,27 +157,33 @@ void setup()
     // init Timer and register callback
     Timer1.initialize(updateServosEveryMs * 1000); // 20ms
     Timer1.attachInterrupt(updateServos);
+
+    pinMode(pin_internal_led,            OUTPUT);
+    pinMode(pin_servo_update_status_led, OUTPUT);
+    digitalWrite(pin_internal_led, HIGH);
 }
 
 void onIncomingData(char c) {
-  Serial.println(c);
+    // Serial.print(c); // send back received data
     Mrcpparser->parseChar(c);
 }
 
 volatile long timer;
+volatile long maxTimer;
 
 void updateServos() {
-    timer = micros();
+    digitalLow(pin_internal_led);
+
+    // timer = micros();
 
     for (size_t i = 0; i < 8; i++) {
         servos[i]->process(updateServosEveryMs);
     }
 
-    // important: move to loop when debugging (Serial.print needs ISR)
     // todo use volatile and ATOMIC on angle buffer and stuff
-    RoboCon->process();
+    digitalHigh(pin_internal_led);
 
-    timer = micros() - timer;
+
 }
 
 void renderDisplay();
@@ -175,25 +191,28 @@ void renderDisplay();
 
 void loop()
 {
+
     static unsigned int displayCounter = 0;
 
     logger.resetTime();
 
-    // logger.time("before process");
-    //
-    // logger.time("after process");
-
-    if (displayCounter++ >= 10000) {
-        renderDisplay();
+    RoboCon->process();// should be part of ISR, but then the display is not working propery. I2C also requires an interrupt
+    // status led
+    // digitalWrite(pin_internal_led, HIGH);
+    if (displayCounter++ >= 200) {
+        renderDisplay(); // takes ~50 ms
         displayCounter = 0;
-
-        // Serial.println(timer);
     }
 
-    // logger.time("after Display");
+    // may want to put RoboCon->process in an interrupt based timer as well
+    // drawing the display takes quite some time
+
+    RoboCon->process();
     Serialio.process();
     Mrilparser->process();
     Mrcpparser->process();
+
+    // digitalWrite(pin_internal_led, LOW);
 
     for (size_t i = 0; i < 8; i++) {
         if (servos[i]->getOutOfRange()) {
@@ -228,15 +247,25 @@ void renderDisplay() {
         break;
     }
     firstLine += " V " + String(RoboCon->getMaxVelocity());
-    Display.displayText(0,      0, firstLine);
-    Display.displayText(13 * 6, 0, "B " + String(Ringbuffer.getSize()) + "/" + String(Ringbuffer.getCapacity()));
+
+    switch (Mrcpparser->getMode()) {
+    case MRCPParser::MRCPMODE::EEPROM:
+        Display.displayText(12 * 6, 0,
+                            "W " + String(Eepromstorage.getMessagePointer()) + "/" + String(Eepromstorage.getNumberOfMessages()));
+        break;
+
+    case MRCPParser::MRCPMODE::QUEUE:
+        Display.displayText(12 * 6, 0, "B " + String(Ringbuffer.getSize()) + "/" + String(Ringbuffer.getCapacity()));
+        break;
+    }
+    Display.displayText(0, 0, firstLine);
     Display.displayBars(64, 8, 64, 6 * 3, servos);
 
-    if (IOLogic.isDone()) {
-        Display.displayText(0, 8, "done");
-    } else {
-        Display.displayText(0, 8, "n done");
-    }
+    // if (IOLogic.isDone()) {
+    //     Display.displayText(0, 8, "done");
+    // } else {
+    //     Display.displayText(0, 8, "n done");
+    // }
 
     // --- show IO ---
     if (true || !IOLogic.isDone()) {

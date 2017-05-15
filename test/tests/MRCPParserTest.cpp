@@ -4,6 +4,8 @@
 #include "Arduino.h"
 
 static SerialMock *serialMock = serialMockInstance();
+#include "EEPROM.h"
+
 
 
 #include "mock_RobotController.h"
@@ -26,12 +28,15 @@ static SerialMock *serialMock = serialMockInstance();
 
 #include "AdditionalAxisController.h"
 
+
 using ::testing::InSequence;
 using ::testing::_;
 
 static CommunicationInterface Com;
 static MRCPR Mrcpr(Com);
 static     WaitController W;
+
+static unsigned int pinMap[10] = { 8, 11, 12, 7, 0, 1, 0, 0, 0, 0 };
 
 class MRCPParserTest : public ::testing::Test {
 protected:
@@ -88,7 +93,7 @@ protected:
     mock_RobotController *R;
 
 
-    IOLogic IO;
+    IOLogic IO {pinMap};
     AdditionalAxisController *A;
 
 
@@ -113,6 +118,7 @@ static void helper_moveToTargetPose(RobotController *R, MyServo *servos[6]) {
 
 TEST_F(MRCPParserTest, queueIn)
 {
+  EEPROMMock *mock     = EEPROMMockInstance(); // mrcp looks for data in eeprom on init
     ArduinoMock *arduinoMock = arduinoMockInstance(); // need the mock,since millis is calles
     arduinoMock->setMillisRaw(2000);
     mock_MRILParser mrilparser(*R,

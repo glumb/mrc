@@ -14,11 +14,6 @@
 #define pin_servo_6 20
 #define pin_servo_7 21
 
-#define pin_pot 23
-
-#define pin_button_down 12 // active low
-#define pin_button_up   11
-#define pin_button_ss   14 // servo select
 
 enum mode {
     CALIBRATE,
@@ -58,10 +53,6 @@ const float servoConfig[6][7] = {
 
 void setup()
 {
-    pinMode(pin_pot,         INPUT);
-    pinMode(pin_button_up,   INPUT_PULLUP);
-    pinMode(pin_button_down, INPUT_PULLUP);
-    pinMode(pin_button_ss,   INPUT_PULLUP);
 
     // --- init servos ---
     Serial.begin(115200);
