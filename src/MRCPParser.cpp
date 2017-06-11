@@ -46,14 +46,19 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
     case MRCP_COMMAND_QUEUE_IN:
     {
-        this->mrcpMode = MRCPMODE::QUEUE;
-        unsigned int status;
-        status = _RingBuffer.putBytes(buffer + 1, length - 1); // queue in MRIL minus MRCP command
-
-        if (status == RingBuffer::STATUS_FULL) {
-            logger.warning("buffer full");
+        if (length == 1) {
+            _RingBuffer.clear();
+            logger.info("clearing ringbuffer");
         } else {
-            logger.info("command in buffer");
+            this->mrcpMode = MRCPMODE::QUEUE;
+            unsigned int status;
+            status = _RingBuffer.putBytes(buffer + 1, length - 1); // queue in MRIL minus MRCP command
+
+            if (status == RingBuffer::STATUS_FULL) {
+                logger.warning("buffer full");
+            } else {
+                logger.info("command in buffer");
+            }
         }
 
         break;
@@ -64,7 +69,6 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
         if (length == 1) {
             _EEPromStorage.clear();
             logger.info("clearing eeprom");
-            Serial.println("clearing eeprom");
         } else {
             logger.info("writing to eeprom");
             this->mrcpMode = MRCPMODE::EEPROM;
@@ -124,9 +128,10 @@ void MRCPParser::parseChar(char incomingByte) {
             if (!inputBufferFull) parseCommand(inputByteBuffer, inputByteBufferPointer);
             frameStarted    = false;
             inputBufferFull = false;
-            isComment = false;
-        } else if ((incomingByte == '#') || (incomingByte == '(') || isComment) { // dont parse symbols after comment. Order matters. EndByte has to be parsed
-          logger.info("isComment: "+String(incomingByte));
+            isComment       = false;
+        } else if ((incomingByte == '#') || (incomingByte == '(') || isComment) { // dont parse symbols after comment. Order matters.
+                                                                                  // EndByte has to be parsed
+            logger.info("isComment: " + String(incomingByte));
             isComment = true;
         } else if (incomingByte == MRCP_START_FRAME) {
             // dont save the start byte
