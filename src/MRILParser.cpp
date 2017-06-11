@@ -31,6 +31,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
     char command[MRIL_COMMAND_SIZE];
     unsigned int commandPointer = 0;
+    String responseBuffer = "";
 
 
     if (length == 0) { // buffer is not empty
@@ -93,7 +94,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
             switch (symbol) {
             case MRIL_COMMAND_MOVEMENT_METHOD: {
                 if (commandType == CommandTypes::READ) {
-                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_MOVEMENT_METHOD) + String(this->_RobotController.getMovementMethod()));
+                    responseBuffer += (String(MRIL_COMMAND_MOVEMENT_METHOD) + String(this->_RobotController.getMovementMethod()));
                 } else {
                     unsigned int movementMethodCode = atoi(command + 1);
                     _logger.info("MRIL_COMMAND_MOVE " + String(movementMethodCode));
@@ -121,7 +122,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
             case MRIL_COMMAND_VELOCITY:
             {
                 if (commandType == CommandTypes::READ) {
-                    this->_MRCPR.sendMessage(String(MRIL_COMMAND_VELOCITY) + String(this->_RobotController.getMaxVelocity()));
+                    responseBuffer += (String(MRIL_COMMAND_VELOCITY) + String(this->_RobotController.getMaxVelocity()));
                 } else {
                     float value = atof(command + 1); //  V<val>
 
@@ -177,13 +178,13 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
                     case MRIL_COMMAND_SET_X:
                     case MRIL_COMMAND_SET_Y:
                     case MRIL_COMMAND_SET_Z:
-                        this->_MRCPR.sendMessage(String(symbol) + String(this->_RobotController.getCurrentPose(pose)));
+                        responseBuffer += (String(symbol) + String(this->_RobotController.getCurrentPose(pose)));
                         break;
 
                     case MRIL_COMMAND_SET_A:
                     case MRIL_COMMAND_SET_B:
                     case MRIL_COMMAND_SET_C:
-                        this->_MRCPR.sendMessage(String(symbol) + String(this->_RobotController.getCurrentPose(pose) * RAD_TO_DEG));
+                        responseBuffer += (String(symbol) + String(this->_RobotController.getCurrentPose(pose) * RAD_TO_DEG));
 
                     default:
                         break;
@@ -219,10 +220,10 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
                     commandType = CommandTypes::READ;
 
                     if (option >= 6) {
-                        this->_MRCPR.sendMessage(String(MRIL_COMMAND_ROTATE) + String(option) +
+                        responseBuffer += (String(MRIL_COMMAND_ROTATE) + String(option) +
                                                  String(this->_AdditionalAxisController.getCurrentAngle(option - 6) * RAD_TO_DEG));
                     } else {
-                        this->_MRCPR.sendMessage(String(MRIL_COMMAND_ROTATE) + String(option) +
+                        responseBuffer += (String(MRIL_COMMAND_ROTATE) + String(option) +
                                                  String(this->_RobotController.getCurrentLogicalAngle(option) * RAD_TO_DEG));
                     }
                 } else {
@@ -310,6 +311,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
     this->_RobotController.endTransaction();
 
     if (commandType == CommandTypes::READ) {
+        this->_MRCPR.sendMessage(responseBuffer);
         // read command - finished after parsing
         this->_MRCPR.sendMessage("N1" + String(tmpCommandNumber));
     } else if (commandType == CommandTypes::WRITE) {
