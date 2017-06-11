@@ -37,7 +37,8 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
     case MRCP_COMMAND_EXECUTE:
     {
-        this->mrcpMode = MRCPMODE::EXECUTE;
+        // this->mrcpMode = MRCPMODE::EXECUTE; // Executing a read command should not change the current mode
+        // could add a special "unobtrusive" mode that does not change the mode either
         _MRILParser.parse(buffer + 1, length - 1);
 
         break;
