@@ -346,8 +346,7 @@ TEST(MRILParserTest, sendExecutedCommandNumber)
     {
         InSequence d;
         EXPECT_CALL(MrcprM, sendMessage(String("N042")));
-        EXPECT_CALL(MrcprM, sendMessage(_)); // return X value
-        EXPECT_CALL(MrcprM, sendMessage(String("N142")));
+        EXPECT_CALL(MrcprM, sendMessage(String("N142 X0.000000")));
     }
 
     char instruction[] = { 'N', '4', '2', 'X' };

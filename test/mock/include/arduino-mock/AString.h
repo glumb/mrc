@@ -22,6 +22,7 @@ class String : public std::string {
   String(const String& string) : String(string.c_str()) {}
   String(const std::string& string) : std::string(string) {}
   String(const char* string) : std::string(string) {}
+  String(const char string) : std::string(1,string) {}
   String(const float val) : std::string(std::to_string(val)) {}
   String(const int val) : std::string(std::to_string(val)) {}
   String(const unsigned int val) : std::string(std::to_string(val)) {}
