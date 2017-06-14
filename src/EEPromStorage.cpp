@@ -91,4 +91,5 @@ char EEPromStorage::getNextMessage(char message[]) {
 
 void EEPromStorage::clear() {
     EEPROM.write(0, 0);
+    this->messagePointer = 1;
 }
