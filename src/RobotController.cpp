@@ -44,9 +44,9 @@ Logger logger("RobotController");
 
 #define DOTVP(v, u) ((v)[0] * (u)[0] + (v)[1] * (u)[1] + (v)[2] * (u)[2])
 
-RobotController::RobotController(VarSpeedServo   *servos[],
-                                 Kinematic& _Kinematic,
-                                 float      lal[6][2],
+RobotController::RobotController(VarSpeedServo *servos[],
+                                 Kinematic    & _Kinematic,
+                                 float          lal[6][2],
                                  void(*_logicalToPhysicalAngles)(float[6]),
                                  void(*_physicalToLogicalAngles)(float[6])) :
     Servos{servos[0], servos[1], servos[2], servos[3], servos[4], servos[5]},
@@ -444,7 +444,7 @@ void RobotController::process() {
             logger.error("Do not change pose and angles in one transaction!");
             this->targetAnglesChanged = false;
             this->targetPoseChanged   = false;
-            this->state = IDLE;
+            this->state               = IDLE;
             return;
         }
 
@@ -529,11 +529,11 @@ void RobotController::process() {
             //             // todo include only rotation
             float distance =  sqrt(pow(dx, 2) +  pow(dy, 2) +  pow(dz, 2));
 
-            int distanceSteps = (distance / this->interpolationDistanceIncrement) + 1;                                 // |-.-.-.-.-.| 5
-                                                                                                                       // units '-' is 5
-                                                                                                                       // steps '.'
-            int angleSteps    = (this->interpolationRotationAngle / this->interpolationOrientationAngleIncrement) + 1; // +1 to not divide
-                                                                                                                       // by 0 later
+            int distanceSteps = (distance / this->interpolationDistanceIncrement) + 1;                              // |-.-.-.-.-.| 5
+                                                                                                                    // units '-' is 5
+                                                                                                                    // steps '.'
+            int angleSteps = (this->interpolationRotationAngle / this->interpolationOrientationAngleIncrement) + 1; // +1 to not divide
+                                                                                                                    // by 0 later
 
             totalInterpolationSteps = (distanceSteps > angleSteps) ? distanceSteps : angleSteps;
 
@@ -559,11 +559,22 @@ void RobotController::process() {
         currentInterpolationStep++;
 
         switch (this->movementMethod) {
-        case P2P:
+        case P2P: {
             logger.info("P2P");
-            moveInTime = this->maxVelocity; // todo time is basically velocity
+
+            // calculate max angle change
+            float maxAngleChange = 0;
+
+            for (int i = 0; i < 6; i++) {
+                float delta = fabs(this->startAngles[i] - this->targetAngles[i]);
+
+                if (delta > maxAngleChange) maxAngleChange = delta;
+            }
+            moveInTime = maxAngleChange / this->maxVelocity * RAD_TO_DEG; // t = s/v
+            Serial.println(moveInTime);
             memcpy(tmpTargetAngles, this->targetAngles, 6 * sizeof(float));
             break;
+        }
 
         case LINEAR:
         {
