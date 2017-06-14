@@ -6,7 +6,7 @@
 # include "../examples/CalibrateServos.h"
 #else // ifdef EXAMPLES
 
-# include "config.h"
+# include "../config/mp-robot-d.h"
 # include <Arduino.h>
 # include "VarSpeedServo.h"
 # include "TimerOne.h"
@@ -199,7 +199,7 @@ void loop()
     RoboCon->process();// should be part of ISR, but then the display is not working propery. I2C also requires an interrupt
     // status led
     // digitalWrite(pin_internal_led, HIGH);
-    if (displayCounter++ >= 200) {
+    if (displayCounter++ >= 20000) {
         renderDisplay(); // takes ~50 ms
         displayCounter = 0;
     }
@@ -246,7 +246,7 @@ void renderDisplay() {
         firstLine += "M02";
         break;
     }
-    firstLine += " V " + String(RoboCon->getMaxVelocity());
+    firstLine += " V " + String(RoboCon->getMaxVelocity(), 1);
 
     switch (Mrcpparser->getMode()) {
     case MRCPParser::MRCPMODE::EEPROM:
