@@ -24,11 +24,11 @@ const float servoConfig[6][7] = {
 
 // mor mp-robot-a/mp-robot-kit
 float geometry[5][3] = {
-    {    5, 0,  7.3 },
-    {    0, 0, 13.0 },
-    {    1, 0,    2 },
-    { 12.6, 0,    0 },
-    {    0, 0, -3.6 }
+    {    4.6, 0,    7.9 },
+    {      0, 0,   11.7 },
+    {      1, 0,    1.5 },
+    {  12.15, 0,      0 },
+    {      0, 0,     -3 }
 };
 
 // E.g. joint 0 cant be < 90° to not crash into itself
@@ -56,7 +56,6 @@ void physicalToLogicalAngles(float angles[6]) {
     angles[2] -= angles[1];
 }
 
-
 // 4 axis
 // const float servoConfig[6][7] = {
 //     { pin_robot_servo_0,  250,  570.00, 2400.00,  -77.00,  83.00,   0 },
@@ -70,10 +69,12 @@ void physicalToLogicalAngles(float angles[6]) {
 // float geometry[5][3] = { { 2.5 + 2.3, 7.3, 0 }, { 0, 13.0, 0 }, { 1, 0, 0 }, { 12.6, 0, 0 }, { 0, -3.6, 0 } };
 
 // configure additional axis such as grippers and other devices
-// pinNumber, maxAngularVel degree/sec, calibMin, calibMax, angleDegMin, angleDegMax, home position || angleDegMin/Max can be any value you want to map the min and max frequency to.
+// pinNumber, maxAngularVel degree/sec, calibMin, calibMax, angleDegMin, angleDegMax, home position || angleDegMin/Max can be any value you
+// want to map the min and max frequency to.
 // It may be usefull to map a gripper to 0-100 based on the percentage of opening.
 const float additionalAxisServoConfig[2][7] = {
-    { pin_additional_servo_6, 160.00 * DEG_TO_RAD, 1888.00,    1122,    0.00 * DEG_TO_RAD,  1.00 * DEG_TO_RAD, 0 }, // mapped to 0-1, to open:1, closed:0
+    { pin_additional_servo_6, 160.00 * DEG_TO_RAD, 1888.00,    1122,    0.00 * DEG_TO_RAD,  1.00 * DEG_TO_RAD, 0 }, // mapped to 0-1, to
+                                                                                                                    // open:1, closed:0
     { pin_additional_servo_7, 160.00 * DEG_TO_RAD,    1000, 2000.00,  -90.00 * DEG_TO_RAD, 90.00 * DEG_TO_RAD, 0 }
 };
 
