@@ -42,12 +42,12 @@ float tmpServoConfig[6][6] = {
 };
 
 const float servoConfig[6][7] = {
-    { pin_servo_0, 80.00 * DEG_TO_RAD,  700.00, 2380.00,  -90.00 * DEG_TO_RAD,  90.00 * DEG_TO_RAD, 0 },
-    { pin_servo_1, 80.00 * DEG_TO_RAD,  710.00, 1880.00,  -45.00 * DEG_TO_RAD,  90.00 * DEG_TO_RAD, 0 },
-    { pin_servo_2, 80.00 * DEG_TO_RAD, 2330.00,  640.00,  -45.00 * DEG_TO_RAD, 135.00 * DEG_TO_RAD, 0 },
-    { pin_servo_3, 80.00 * DEG_TO_RAD,  740.00, 2260.00,  -90.00 * DEG_TO_RAD,  85.00 * DEG_TO_RAD, 0 },
-    { pin_servo_4, 80.00 * DEG_TO_RAD,  730.00, 2360.00,    -140 * DEG_TO_RAD,  15.00 * DEG_TO_RAD, 0 },
-    { pin_servo_5, 80.00 * DEG_TO_RAD,  740.00, 2200.00,  -90.00 * DEG_TO_RAD,  60.00 * DEG_TO_RAD, 0 }
+    { pin_servo_0,  150 * DEG_TO_RAD,    852, 2091,    -90 * DEG_TO_RAD,     90 * DEG_TO_RAD, 0 },
+    { pin_servo_1,  150 * DEG_TO_RAD,    710, 1780,    -70 * DEG_TO_RAD,     90 * DEG_TO_RAD, 0 },
+    { pin_servo_2,  150 * DEG_TO_RAD,   2070,  600,    -90 * DEG_TO_RAD,    138 * DEG_TO_RAD, 0 },
+    { pin_servo_3,  150 * DEG_TO_RAD,    650, 2370,    -90 * DEG_TO_RAD,     75 * DEG_TO_RAD, 0 },
+    { pin_servo_4,  150 * DEG_TO_RAD,   2370,  860,   -127 * DEG_TO_RAD,     14 * DEG_TO_RAD, 0 },
+    { pin_servo_5,  150 * DEG_TO_RAD,   2290,  570,    -75 * DEG_TO_RAD,     86 * DEG_TO_RAD, 0 }
 };
 
 
@@ -248,7 +248,7 @@ void loop()
 
                 for (size_t j = 2; j < 6; j++) {
                     if ((j == 1) || (j == 4) || (j == 5) || (j == 6)) {
-                        Serial.print(tmpServoConfig[i][j] * RAD_TO_DEG);
+                        Serial.print(tmpServoConfig[i][j]);
                         Serial.print("*DEG_TO_RAD");
                     } else {
                         Serial.print(tmpServoConfig[i][j]);
@@ -362,7 +362,7 @@ void loop()
                                map_float(tmpServoConfig[selectedServo][1], tmpServoConfig[selectedServo][2],
                                                tmpServoConfig[selectedServo][3], tmpServoConfig[selectedServo][4],
                                                tmpServoConfig[selectedServo][5])
-                               * RAD_TO_DEG));
+                               ));
             frequency = constrain(frequency, SERVOMIN, SERVOMAX);
         }
 
