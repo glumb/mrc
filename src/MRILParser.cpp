@@ -31,7 +31,7 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
     char command[MRIL_COMMAND_SIZE];
     unsigned int commandPointer = 0;
-    String responseBuffer = "";
+    String responseBuffer       = "";
 
 
     if (length == 0) { // buffer is not empty
@@ -221,10 +221,10 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 
                     if (option >= 6) {
                         responseBuffer += (String(MRIL_COMMAND_ROTATE) + String(option) +
-                                                 String(this->_AdditionalAxisController.getCurrentAngle(option - 6) * RAD_TO_DEG));
+                                           String(this->_AdditionalAxisController.getCurrentAngle(option - 6) * RAD_TO_DEG));
                     } else {
                         responseBuffer += (String(MRIL_COMMAND_ROTATE) + String(option) +
-                                                 String(this->_RobotController.getCurrentLogicalAngle(option) * RAD_TO_DEG));
+                                           String(this->_RobotController.getCurrentLogicalAngle(option) * RAD_TO_DEG));
                     }
                 } else {
                     float value = atof(command + 2);
@@ -239,7 +239,6 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
                     } else {
                         this->_RobotController.setTargetLogicalAngle(option, value * DEG_TO_RAD);
                     }
-
                 }
                 break;
             }
@@ -311,9 +310,11 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
     this->_RobotController.endTransaction();
 
     if (commandType == CommandTypes::READ) {
-        this->_MRCPR.sendMessage(responseBuffer);
         // read command - finished after parsing
-        this->_MRCPR.sendMessage("N1" + String(tmpCommandNumber));
+        if (tmpCommandNumber > 0) {
+            responseBuffer = "N1" + String(tmpCommandNumber) + ' ' + responseBuffer;
+        }
+        this->_MRCPR.sendMessage(responseBuffer);
     } else if (commandType == CommandTypes::WRITE) {
         // write command - change the cN
         this->commandNumber = tmpCommandNumber;
@@ -326,8 +327,10 @@ void MRILParser::parse(char mrilInstruction[], unsigned int length) {
 void MRILParser::process() {
     if (this->_IOLogic.isDone() && !this->_RobotController.isMoving() &&  this->_WaitController.isDone()) { // todo add additionalAxis
         if (this->commandNumber > 0) {                                                                      // command number exists
+            // TODO send N2 <number> and the error that occured E01 E02 - out of angle - etc
+            // this->_MRCPR.sendMessage(String(MRIL_COMMAND_NUMBER) + "2" + String(this->commandNumber));
             this->_MRCPR.sendMessage(String(MRIL_COMMAND_NUMBER) + "1" + String(this->commandNumber));
-            this->commandNumber = -1;                                                                       // command was executed
+            this->commandNumber = -1; // command was executed
         }
         this->done = true;
     } else {
