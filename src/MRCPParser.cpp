@@ -46,11 +46,12 @@ void MRCPParser::parseCommand(char buffer[], unsigned int length) {
 
     case MRCP_COMMAND_QUEUE_IN:
     {
+        this->mrcpMode = MRCPMODE::QUEUE;
+
         if (length == 1) {
             _RingBuffer.clear();
             logger.info("clearing ringbuffer");
         } else {
-            this->mrcpMode = MRCPMODE::QUEUE;
             unsigned int status;
             status = _RingBuffer.putBytes(buffer + 1, length - 1); // queue in MRIL minus MRCP command
 
