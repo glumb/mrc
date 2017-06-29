@@ -1,5 +1,4 @@
 #include "Arduino.h"
-#include "Kinematic.h"
 
 // ---- Servos ---- on Teensy PWM pins are 3-6 9-10 20-21
 #define pin_servo_0 3
