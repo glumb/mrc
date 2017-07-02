@@ -5,7 +5,10 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/glumb/mrc/master/LICENSE.md)
 [![Travis](https://img.shields.io/travis/glumb/mrcl.svg)](https://travis-ci.org/glumb/mrc)
 
-micropede robot controller 🤖🖥👾
+MicroPede Robot Controller 🤖🖥👾
+
+The MRC lets you control 6 DOF/axis robotic arms using the g-code like [MRIL](https://github.com/glumb/mrcp) language.
+The istructions can either be transferred directly to the controller using `screen`, or any other serial monitor, or with the help of a library, such as the [MRCL](https://github.com/glumb/mrcl) (MicroPede Robot Control Library)
 
 Zu den Robotern [hier entlang](https://micropede.de/shop#filter=.robot).
 
