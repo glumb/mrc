@@ -149,6 +149,7 @@ increase the log-level in `Logger.cpp` to see whats happening in the controller.
 ## Troubleshooting
 
 **MRC does not respond** unexprected data in the EEPROM may freeze the MRC. In main.cpp uncomment `// Eepromstorage.clear();` in line 75.
+
 **can not send commands** make sure your terminal monitor sends a '\r' when pressing return. Otherwise in MRCP.h change the MRCP `MRCP_END_FRAME = '\r'` to any unused char.
 
 ## todo
