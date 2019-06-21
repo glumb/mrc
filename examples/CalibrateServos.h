@@ -1,4 +1,4 @@
-#include "servodata.h"
+#include "../config/servodata.h"
 #include "../src/VarSpeedServo.h"
 #include "TimerOne.h"
 
