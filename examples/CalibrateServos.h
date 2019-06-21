@@ -2,7 +2,7 @@
 #include "../src/VarSpeedServo.h"
 #include "TimerOne.h"
 
-// use w: up, s: down, d: print, q: goto 0 angle, e,r,t,z:set min_max_angle_freq
+// use w: up, s: down, p: print, q: goto 0 angle, a: goto min angle, d: goto max angle, e,r,t,z:set min_max_angle_freq
 
 enum mode {
     CALIBRATE,
@@ -85,6 +85,8 @@ float currentAngles[6] = { 0 };
 #define CHANGE_MIN_FREQUENCY 't'
 #define CHANGE_MAX_FREQUENCY 'z'
 #define MOVE_TO_ZERO 'q'
+#define MOVE_TO_MIN 'a'
+#define MOVE_TO_MAX 'd'
 #define SET_MOVE 'n'
 #define PRINT_CONFIG 'p'
 #define CHANGE_MODE 'm'
@@ -117,6 +119,10 @@ void printHelp() {
     delay(10);
     Serial.println("move servo to angle 0 degree: " + String(MOVE_TO_ZERO) + " (used to check proper home position)");
     delay(10);
+    Serial.println("move servo to min angle: " + String(MOVE_TO_MIN) + " (max velocity, use carefully to avoid collisions)");
+    delay(10);
+    Serial.println("move servo to max angle: " + String(MOVE_TO_MAX) + " (max velocity, use carefully to avoid collisions)");
+    delay(10);
     Serial.println("print config: " + String(PRINT_CONFIG));
     delay(10);
 
@@ -127,6 +133,14 @@ void printHelp() {
 float map_float(float x, float in_min, float in_max, float out_min, float out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+bool moveToAngle(int servo, float angle) {
+    Serial.println("moving to angle: " + String(angle) + " degree ");
+    servos[servo]->setTargetRadAngle(angle);
+    servos[servo]->process(10000); // high number to fake high interval and move to target position
+
+    return true;
 }
 
 void loop()
@@ -209,13 +223,16 @@ void loop()
             break;
 
         case MOVE_TO_ZERO:
-            Serial.println("moving to angle: 0 degree ");
-            servos[selectedServo]->setTargetRadAngle(0);
-            servos[selectedServo]->process(10000); // high number to fake high interval and move to target position
-
-            changed = true;
+            changed = moveToAngle(selectedServo, 0);
             break;
 
+        case MOVE_TO_MIN:
+            changed = moveToAngle(selectedServo, tmpServoConfig[selectedServo][4]);
+            break;
+
+        case MOVE_TO_MAX:
+            changed = moveToAngle(selectedServo, tmpServoConfig[selectedServo][5]);
+            break;
 
         case PRINT_CONFIG:
 
