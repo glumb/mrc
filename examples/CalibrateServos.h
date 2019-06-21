@@ -1,7 +1,6 @@
-#include <Arduino.h>
+#include "servodata.h"
 #include "../src/VarSpeedServo.h"
 #include "TimerOne.h"
-#include "servodata.h"
 
 // use w: up, s: down, d: print, q: goto 0 angle, e,r,t,z:set min_max_angle_freq
 
