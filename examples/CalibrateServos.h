@@ -244,7 +244,7 @@ void loop()
 
                 for (size_t j = 2; j < 6; j++) {
                     if ((j == 1) || (j == 4) || (j == 5) || (j == 6)) {
-                        Serial.print(tmpServoConfig[i][j]);
+                        Serial.print(tmpServoConfig[i][j] * RAD_TO_DEG);
                         Serial.print("*DEG_TO_RAD");
                     } else {
                         Serial.print(tmpServoConfig[i][j]);
@@ -280,12 +280,12 @@ void loop()
         case ANGLE_MAX:
 
             if (serialInput == INCREMENT) {
-                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]++;
+                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] += DEG_TO_RAD;
                 servos[selectedServo]->setAngleLimits(tmpServoConfig[selectedServo][4],
                                                       tmpServoConfig[selectedServo][5]);
                 changed = true;
             } else if (serialInput == DECREMENT) {
-                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]--;
+                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] -= DEG_TO_RAD;
                 servos[selectedServo]->setAngleLimits(tmpServoConfig[selectedServo][4],
                                                       tmpServoConfig[selectedServo][5]);
                 changed = true;
@@ -334,11 +334,11 @@ void loop()
 
             switch (setmode) {
             case ANGLE_MIN:
-                mode = "ANGLE_MIN angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]);
+                mode = "ANGLE_MIN angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] * RAD_TO_DEG);
                 break;
 
             case ANGLE_MAX:
-                mode = "ANGLE_MAX angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]);
+                mode = "ANGLE_MAX angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] * RAD_TO_DEG);
                 break;
 
             case FREQ_MIN:
@@ -357,7 +357,7 @@ void loop()
                            String(
                                map_float(tmpServoConfig[selectedServo][1], tmpServoConfig[selectedServo][2],
                                                tmpServoConfig[selectedServo][3], tmpServoConfig[selectedServo][4],
-                                               tmpServoConfig[selectedServo][5])
+                                               tmpServoConfig[selectedServo][5]) * RAD_TO_DEG
                                ));
             frequency = constrain(frequency, SERVOMIN, SERVOMAX);
         }
