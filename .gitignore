@@ -56,3 +56,4 @@ DartConfiguration.tcl
 *.exe
 *.out
 *.app
+/.vscode
