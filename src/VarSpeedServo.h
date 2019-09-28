@@ -51,7 +51,7 @@ public:
 
     MOCK_VIRTUAL bool         atTargetAngle();
 
-    MOCK_VIRTUAL void         process(unsigned int deltaT = DELTA_T);
+    MOCK_VIRTUAL unsigned int process(unsigned int deltaT = DELTA_T);
 
     MOCK_VIRTUAL float        getHomeRadAngle();
 
@@ -84,7 +84,7 @@ private:
 
     Servo servo;
 
-    void         move();
+    unsigned int move();
 
     static float map_float(float x,
                            float in_min,

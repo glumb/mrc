@@ -138,7 +138,8 @@ float map_float(float x, float in_min, float in_max, float out_min, float out_ma
 bool moveToAngle(int servo, float angle) {
     Serial.println("moving to angle: " + String(angle) + " degree ");
     servos[servo]->setTargetRadAngle(angle);
-    servos[servo]->process(10000); // high number to fake high interval and move to target position
+    auto frequency = servos[servo]->process(10000); // high number to fake high interval and move to target position
+    tmpServoConfig[servo][1] = frequency;
 
     return true;
 }

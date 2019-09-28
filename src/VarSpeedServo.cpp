@@ -140,7 +140,7 @@ float VarSpeedServo::getMaxAngleVelocity() {
     return this->maxAngleVelocity;
 }
 
-void VarSpeedServo::process(unsigned int deltaT) {
+unsigned int VarSpeedServo::process(unsigned int deltaT) {
     // v = s/t
     this->elapsedTime += deltaT;
 
@@ -162,7 +162,7 @@ void VarSpeedServo::process(unsigned int deltaT) {
         }
     }
 
-    this->move();
+    return this->move();
 
 }
 
@@ -170,12 +170,14 @@ bool VarSpeedServo::atTargetAngle() {
     return fabs(this->currentAngle - this->targetAngle) < 0.000001;
 }
 
-void VarSpeedServo::move() {
+unsigned int VarSpeedServo::move() {
     unsigned int freq = int(
         this->map_float(this->currentAngle, this->minRadAngle, this->maxRadAngle, this->minFreq, this->maxFreq)
         );
 
     if (!this->virtualServo) this->servo.writeMicroseconds(freq);
+
+    return freq;
 }
 
 float VarSpeedServo::map_float(float x, float in_min, float in_max, float out_min, float out_max)
