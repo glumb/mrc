@@ -1,19 +1,8 @@
-#include <Arduino.h>
+#include "../config/servodata.h"
 #include "../src/VarSpeedServo.h"
 #include "TimerOne.h"
 
-// use w: up, s: down, d: print, q: goto 0 angle, e,r,t,z:set min_max_angle_freq
-
-// ---- Servos ---- Teensy 3.2 PWM pins 3-6 9-10 20-23
-#define pin_servo_0 3
-#define pin_servo_1 4
-#define pin_servo_2 5
-#define pin_servo_3 6
-#define pin_servo_4 9
-#define pin_servo_5 10
-#define pin_servo_6 20
-#define pin_servo_7 21
-
+// use w: up, s: down, p: print, q: goto 0 angle, a: goto min angle, d: goto max angle, e,r,t,z:set min_max_angle_freq
 
 enum mode {
     CALIBRATE,
@@ -40,16 +29,6 @@ float tmpServoConfig[6][6] = {
     { pin_servo_4,     1500,    1500,    1500,    -20 * DEG_TO_RAD,    135 * DEG_TO_RAD },
     { pin_servo_5,     1500,    1500,    1500,   -180 * DEG_TO_RAD,    180 * DEG_TO_RAD }
 };
-
-const float servoConfig[6][7] = {
-    { pin_servo_0,  150 * DEG_TO_RAD,    852, 2091,    -90 * DEG_TO_RAD,     90 * DEG_TO_RAD, 0 },
-    { pin_servo_1,  150 * DEG_TO_RAD,    710, 1780,    -70 * DEG_TO_RAD,     90 * DEG_TO_RAD, 0 },
-    { pin_servo_2,  150 * DEG_TO_RAD,   2070,  600,    -90 * DEG_TO_RAD,    138 * DEG_TO_RAD, 0 },
-    { pin_servo_3,  150 * DEG_TO_RAD,    650, 2370,    -90 * DEG_TO_RAD,     75 * DEG_TO_RAD, 0 },
-    { pin_servo_4,  150 * DEG_TO_RAD,   2370,  860,   -127 * DEG_TO_RAD,     14 * DEG_TO_RAD, 0 },
-    { pin_servo_5,  150 * DEG_TO_RAD,   2290,  570,    -75 * DEG_TO_RAD,     86 * DEG_TO_RAD, 0 }
-};
-
 
 void setup()
 {
@@ -106,6 +85,8 @@ float currentAngles[6] = { 0 };
 #define CHANGE_MIN_FREQUENCY 't'
 #define CHANGE_MAX_FREQUENCY 'z'
 #define MOVE_TO_ZERO 'q'
+#define MOVE_TO_MIN 'a'
+#define MOVE_TO_MAX 'd'
 #define SET_MOVE 'n'
 #define PRINT_CONFIG 'p'
 #define CHANGE_MODE 'm'
@@ -138,6 +119,10 @@ void printHelp() {
     delay(10);
     Serial.println("move servo to angle 0 degree: " + String(MOVE_TO_ZERO) + " (used to check proper home position)");
     delay(10);
+    Serial.println("move servo to min angle: " + String(MOVE_TO_MIN) + " (max velocity, use carefully to avoid collisions)");
+    delay(10);
+    Serial.println("move servo to max angle: " + String(MOVE_TO_MAX) + " (max velocity, use carefully to avoid collisions)");
+    delay(10);
     Serial.println("print config: " + String(PRINT_CONFIG));
     delay(10);
 
@@ -148,6 +133,15 @@ void printHelp() {
 float map_float(float x, float in_min, float in_max, float out_min, float out_max)
 {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+bool moveToAngle(int servo, float angle) {
+    Serial.println("moving to angle: " + String(angle) + " degree ");
+    servos[servo]->setTargetRadAngle(angle);
+    auto frequency = servos[servo]->process(10000); // high number to fake high interval and move to target position
+    tmpServoConfig[servo][1] = frequency;
+
+    return true;
 }
 
 void loop()
@@ -230,13 +224,16 @@ void loop()
             break;
 
         case MOVE_TO_ZERO:
-            Serial.println("moving to angle: 0 degree ");
-            servos[selectedServo]->setTargetRadAngle(0);
-            servos[selectedServo]->process(10000); // high number to fake high interval and move to target position
-
-            changed = true;
+            changed = moveToAngle(selectedServo, 0);
             break;
 
+        case MOVE_TO_MIN:
+            changed = moveToAngle(selectedServo, tmpServoConfig[selectedServo][4]);
+            break;
+
+        case MOVE_TO_MAX:
+            changed = moveToAngle(selectedServo, tmpServoConfig[selectedServo][5]);
+            break;
 
         case PRINT_CONFIG:
 
@@ -248,7 +245,7 @@ void loop()
 
                 for (size_t j = 2; j < 6; j++) {
                     if ((j == 1) || (j == 4) || (j == 5) || (j == 6)) {
-                        Serial.print(tmpServoConfig[i][j]);
+                        Serial.print(tmpServoConfig[i][j] * RAD_TO_DEG);
                         Serial.print("*DEG_TO_RAD");
                     } else {
                         Serial.print(tmpServoConfig[i][j]);
@@ -284,12 +281,12 @@ void loop()
         case ANGLE_MAX:
 
             if (serialInput == INCREMENT) {
-                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]++;
+                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] += DEG_TO_RAD;
                 servos[selectedServo]->setAngleLimits(tmpServoConfig[selectedServo][4],
                                                       tmpServoConfig[selectedServo][5]);
                 changed = true;
             } else if (serialInput == DECREMENT) {
-                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]--;
+                tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] -= DEG_TO_RAD;
                 servos[selectedServo]->setAngleLimits(tmpServoConfig[selectedServo][4],
                                                       tmpServoConfig[selectedServo][5]);
                 changed = true;
@@ -338,11 +335,11 @@ void loop()
 
             switch (setmode) {
             case ANGLE_MIN:
-                mode = "ANGLE_MIN angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]);
+                mode = "ANGLE_MIN angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] * RAD_TO_DEG);
                 break;
 
             case ANGLE_MAX:
-                mode = "ANGLE_MAX angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5]);
+                mode = "ANGLE_MAX angle: " + String(tmpServoConfig[selectedServo][(setmode == ANGLE_MIN) ? 4 : 5] * RAD_TO_DEG);
                 break;
 
             case FREQ_MIN:
@@ -361,7 +358,7 @@ void loop()
                            String(
                                map_float(tmpServoConfig[selectedServo][1], tmpServoConfig[selectedServo][2],
                                                tmpServoConfig[selectedServo][3], tmpServoConfig[selectedServo][4],
-                                               tmpServoConfig[selectedServo][5])
+                                               tmpServoConfig[selectedServo][5]) * RAD_TO_DEG
                                ));
             frequency = constrain(frequency, SERVOMIN, SERVOMAX);
         }
